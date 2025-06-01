@@ -2,6 +2,10 @@ const endpoints = {
   login: '/api/admin/login',
   logout: '/api/admin/logout',
   me: '/api/admin/me',
+
+  getS3Signatures: 'POST /api/common/s3_signatures',
+  getS3Signature: 'POST /api/common/s3_signature',
+
   dashboard: '/api/admin/dashboard',
   paginateBrands: '/api/admin/brands',
   getBrand: `/api/admin/brands/:brand_id`,

@@ -3,7 +3,7 @@ import request from './request'
 import endpoints from './endpoints'
 import config from '@/config'
 
-export interface IApiResponse<T = object> {
+export interface ApiResponse<T = object> {
   success: boolean
   message: string
   statusCode: number
@@ -33,13 +33,16 @@ const gen = (params: string, baseURL?: string) => {
       method,
       params: options?.params,
       baseURL: options?.baseURL || baseURL,
-      headers: options?.headers
+      headers: options?.headers || {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
     })
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type APIFunc = <T>(data?: any, option?: IOption) => Promise<IApiResponse<T>>
+export type APIFunc = <T>(data?: any, option?: IOption) => Promise<ApiResponse<T>>
 
 export type APIMap = {
   [key in keyof typeof endpoints]: APIFunc

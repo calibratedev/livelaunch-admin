@@ -70,6 +70,8 @@ import api from "@/lib/api";
 import { queryKeys } from "@/lib/api/query-keys";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { DragDropFileUpload } from "@/components/drag-drop-file-upload";
+import { uploadFile } from "@/lib/api/upload";
 
 // Zod schema for brand validation
 const brandSchema = z.object({
@@ -89,10 +91,10 @@ const brandSchema = z.object({
   primary_color: z
     .string()
     .regex(/^#[0-9A-F]{6}$/i, "Please enter a valid hex color (e.g., #FF5733)"),
-  get_started_image_attachment: z.instanceof(File).nullable().optional(),
-  logo_image_attachment: z.instanceof(File).nullable().optional(),
-  background_image_attachment: z.instanceof(File).nullable().optional(),
-  frame_image_attachment: z.instanceof(File).nullable().optional(),
+  get_started_image_attachment: z.any().nullable().optional(),
+  logo_image_attachment: z.any().nullable().optional(),
+  background_image_attachment: z.any().nullable().optional(),
+  frame_image_attachment: z.any().nullable().optional(),
 });
 
 type BrandFormData = z.infer<typeof brandSchema>;
@@ -150,8 +152,50 @@ export default function BrandsPage() {
 
   // Mutations for brand operations
   const createBrandMutation = useMutation({
-    mutationFn: (brandData: FormData) => {
-      return api.createBrand<AppTypes.Brand>(brandData);
+    mutationFn: async (brandData: BrandFormData) => {
+      const getStartedImage = brandData.get_started_image_attachment;
+      if (getStartedImage && getStartedImage instanceof File) {
+        const resp = await uploadFile(getStartedImage, "brand_template");
+        brandData.get_started_image_attachment = resp.data.file_key;
+      }
+
+      if (
+        brandData.logo_image_attachment &&
+        brandData.logo_image_attachment instanceof File
+      ) {
+        const resp = await uploadFile(
+          brandData.logo_image_attachment,
+          "brand_logo"
+        );
+        brandData.logo_image_attachment = resp.data.file_key;
+      }
+
+      if (
+        brandData.background_image_attachment &&
+        brandData.background_image_attachment instanceof File
+      ) {
+        const resp = await uploadFile(
+          brandData.background_image_attachment,
+          "brand_background"
+        );
+        brandData.background_image_attachment = resp.data.file_key;
+      }
+
+      if (
+        brandData.frame_image_attachment &&
+        brandData.frame_image_attachment instanceof File
+      ) {
+        const resp = await uploadFile(
+          brandData.frame_image_attachment,
+          "brand_frame"
+        );
+        brandData.frame_image_attachment = resp.data.file_key;
+      }
+
+      return await api.createBrand<AppTypes.Brand>({
+        ...brandData,
+        shopify_domain: shopifyDomain,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.brands });
@@ -169,36 +213,7 @@ export default function BrandsPage() {
   });
 
   const onSubmit = (data: BrandFormData) => {
-    // Create FormData for file uploads
-    const formData = new FormData();
-    formData.append("name", data.name);
-    formData.append("email", data.email);
-    formData.append("shopify_shop_name", data.shopify_shop_name);
-    formData.append("shopify_domain", shopifyDomain);
-    formData.append("primary_color", data.primary_color);
-
-    if (data.get_started_image_attachment) {
-      formData.append(
-        "get_started_image_attachment",
-        data.get_started_image_attachment
-      );
-    }
-    if (data.logo_image_attachment) {
-      formData.append("logo_image_attachment", data.logo_image_attachment);
-    }
-    if (data.background_image_attachment) {
-      formData.append(
-        "background_image_attachment",
-        data.background_image_attachment
-      );
-    }
-    if (data.frame_image_attachment) {
-      formData.append("frame_image_attachment", data.frame_image_attachment);
-    }
-
-    console.log("**** formData", formData);
-
-    createBrandMutation.mutate(formData);
+    createBrandMutation.mutate(data);
   };
 
   const handleDeleteBrand = (id: string) => {
@@ -368,129 +383,51 @@ export default function BrandsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Logo Upload */}
-                      <div className="space-y-2">
-                        <Label htmlFor="logo_image_attachment">
-                          Logo Image
-                        </Label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                          <input
-                            id="logo_image_attachment"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] || null;
-                              setValue("logo_image_attachment", file);
-                            }}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="logo_image_attachment"
-                            className="cursor-pointer"
-                          >
-                            <Image className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-600">
-                              {watch("logo_image_attachment")?.name ||
-                                "Click to upload logo"}
-                            </p>
-                          </label>
-                        </div>
-                      </div>
+                      <DragDropFileUpload
+                        id="logo_image_attachment"
+                        label="Logo Image"
+                        currentFile={watch("logo_image_attachment")}
+                        onFileChange={(file) =>
+                          setValue("logo_image_attachment", file)
+                        }
+                        icon={Image}
+                      />
 
                       {/* Get Started Image Upload */}
-                      <div className="space-y-2">
-                        <Label htmlFor="get_started_image_attachment">
-                          Get Started Image
-                        </Label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                          <input
-                            id="get_started_image_attachment"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] || null;
-                              setValue("get_started_image_attachment", file);
-                            }}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="get_started_image_attachment"
-                            className="cursor-pointer"
-                          >
-                            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-600">
-                              {watch("get_started_image_attachment")?.name ||
-                                "Click to upload image"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Recommended: 1024x1366 (iPad ratio)
-                            </p>
-                          </label>
-                        </div>
-                      </div>
+                      <DragDropFileUpload
+                        id="get_started_image_attachment"
+                        label="Get Started Image"
+                        currentFile={watch("get_started_image_attachment")}
+                        onFileChange={(file) =>
+                          setValue("get_started_image_attachment", file)
+                        }
+                        icon={Upload}
+                        description="Recommended: 1024x1366 (iPad ratio)"
+                      />
 
                       {/* Background Image Upload */}
-                      <div className="space-y-2">
-                        <Label htmlFor="background_image_attachment">
-                          Background Image
-                        </Label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                          <input
-                            id="background_image_attachment"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] || null;
-                              setValue("background_image_attachment", file);
-                            }}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="background_image_attachment"
-                            className="cursor-pointer"
-                          >
-                            <Palette className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-600">
-                              {watch("background_image_attachment")?.name ||
-                                "Click to upload background"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Recommended: 1024x1366 (iPad ratio)
-                            </p>
-                          </label>
-                        </div>
-                      </div>
+                      <DragDropFileUpload
+                        id="background_image_attachment"
+                        label="Background Image"
+                        currentFile={watch("background_image_attachment")}
+                        onFileChange={(file) =>
+                          setValue("background_image_attachment", file)
+                        }
+                        icon={Palette}
+                        description="Recommended: 1024x1366 (iPad ratio)"
+                      />
 
                       {/* Frame Image Upload */}
-                      <div className="space-y-2">
-                        <Label htmlFor="frame_image_attachment">
-                          Frame Image
-                        </Label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                          <input
-                            id="frame_image_attachment"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] || null;
-                              setValue("frame_image_attachment", file);
-                            }}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor="frame_image_attachment"
-                            className="cursor-pointer"
-                          >
-                            <Image className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-600">
-                              {watch("frame_image_attachment")?.name ||
-                                "Click to upload frame"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Recommended: 1024x1366 (iPad ratio)
-                            </p>
-                          </label>
-                        </div>
-                      </div>
+                      <DragDropFileUpload
+                        id="frame_image_attachment"
+                        label="Frame Image"
+                        currentFile={watch("frame_image_attachment")}
+                        onFileChange={(file) =>
+                          setValue("frame_image_attachment", file)
+                        }
+                        icon={Image}
+                        description="Recommended: 1024x1366 (iPad ratio)"
+                      />
                     </div>
                   </div>
                 </div>

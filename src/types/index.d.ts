@@ -1,10 +1,28 @@
 declare global {
     export namespace AppTypes {
+      export type File = Partial<FileWithPath> & Attachment
+      
       type PaginationParams = {
         page: number
         limit: number
         keyword: string
         include_count: boolean
+      }
+
+      export interface S3Signature {
+        key: string
+        url: string
+        policy: string
+        'x-amz-credential': string
+        'x-amz-algorithm': string
+        'x-amz-signature': string
+        'x-amz-date': string
+        acl: string
+        'content-type': string
+      }
+
+      export interface Records<T> {
+        records: Array<T>
       }
 
       type PaginatedResponse<T> = {
@@ -46,12 +64,12 @@ declare global {
         }
 
         export interface Attachment {
-          content_type: string
-          file_url: string
-          file_key: string
-          file_name: string
-          thumbnail_url: string
-          metadata: object
+          content_type?: string
+          file_url?: string
+          file_key?: string
+          file_name?: string
+          thumbnail_url?: string
+          metadata?: object
         }
 
         export interface Brand {
