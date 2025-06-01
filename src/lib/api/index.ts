@@ -3,61 +3,64 @@ import request from './request'
 import endpoints from './endpoints'
 import config from '@/config'
 
-export interface ApiResponse<T = object> {
-  success: boolean
-  message: string
-  statusCode: number
-  data: T
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  code?: number;
+  data: T;
+  msg?: string;
 }
 
-interface IOption {
-  headers?: { [key: string]: string }
-  params?: object
-  baseURL?: string
-}
+type Option = {
+  headers?: object;
+  params?: object;
+};
 
-const gen = (params: string, baseURL?: string) => {
-  let url = params
-  let method: Method = 'GET'
+// Define the type for the getQueryKey function
+type GetQueryKeyFunction = (...optionalParams: unknown[]) => unknown[];
 
-  const paramsArray = params.split(' ')
+// Define the type for each API method with getQueryKey
+type ApiMethodWithQueryKey = {
+  <T>(data?: unknown, option?: Option): Promise<ApiResponse<T>>;
+  getQueryKey: GetQueryKeyFunction;
+};
+
+// Update APIMap to reflect the actual structure
+type APIMap = {
+  [key in keyof typeof endpoints]: ApiMethodWithQueryKey;
+};
+
+const gen = (params: string, baseURL = config?.apiUrl) => {
+  let url = params;
+  let method: Method = 'GET';
+
+  const paramsArray = params.split(' ');
   if (paramsArray.length === 2) {
-    method = paramsArray[0] as Method
-    url = paramsArray[1]
+    method = paramsArray[0] as Method;
+    url = paramsArray?.[1];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function (data: any, options: IOption) {
+  return function (data: unknown, options: Option) {
     return request(url, {
-      data: data,
+      data: method === 'GET' ? null : data,
       method,
-      params: options?.params,
-      baseURL: options?.baseURL || baseURL,
-      headers: options?.headers || {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      }
-    })
-  }
-}
+      params: options?.params ? options?.params : method === 'GET' ? data : null,
+      baseURL,
+      headers: options?.headers,
+    });
+  };
+};
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type APIFunc = <T>(data?: any, option?: IOption) => Promise<ApiResponse<T>>
-
-export type APIMap = {
-  [key in keyof typeof endpoints]: APIFunc
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const api: any = {}
+// Update the Api object typing
+const Api: Partial<APIMap> = {};
 
 for (const key in endpoints) {
-  const apiURL = config.apiUrl
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  api[key] = gen((endpoints as any)[key], apiURL)
+  if (Object.prototype.hasOwnProperty.call(endpoints, key)) {
+    const apiMethod = gen(endpoints[key as keyof typeof endpoints], ) as ApiMethodWithQueryKey;
+    apiMethod['getQueryKey'] = (...params: unknown[]) => [key, ...params];
+    Api[key as keyof typeof endpoints] = apiMethod;
+  }
 }
 
-export type EndPoints = keyof typeof endpoints
-
-export default api as APIMap
+export default Api as APIMap;

@@ -29,7 +29,6 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/api/query-keys";
 import api from "@/lib/api";
 import Link from "next/link";
 
@@ -60,7 +59,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const logoutMutation = useMutation({
-    mutationKey: queryKeys.logout,
+    mutationKey: api.logout.getQueryKey(),
     mutationFn: () => api.logout(),
   });
 

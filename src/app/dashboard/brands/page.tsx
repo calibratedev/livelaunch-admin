@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,216 +9,95 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import DashboardLayout from "@/components/dashboard-layout";
-import {
-  Building2,
-  Plus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  Calendar,
-  DollarSign,
-  Package,
-  Loader2,
-  Upload,
-  Image,
-  Palette,
-} from "lucide-react";
+import { BrandDialog } from "@/components/brands/brand-dialog";
+import { BrandsTable } from "@/components/brands/brands-table";
+import { BrandsStatsCards } from "@/components/brands/brands-stats-cards";
+import { Plus, Loader2 } from "lucide-react";
 import api from "@/lib/api";
-import { queryKeys } from "@/lib/api/query-keys";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
-import { DragDropFileUpload } from "@/components/drag-drop-file-upload";
-import { uploadFile } from "@/lib/api/upload";
-
-// Zod schema for brand validation
-const brandSchema = z.object({
-  name: z.string().min(1, "Brand name is required").trim(),
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address"),
-  shopify_shop_name: z
-    .string()
-    .min(1, "Shopify shop name is required")
-    .min(3, "Shop name must be at least 3 characters")
-    .regex(
-      /^[a-zA-Z0-9-]+$/,
-      "Shop name must contain only letters, numbers, and hyphens"
-    ),
-  primary_color: z
-    .string()
-    .regex(/^#[0-9A-F]{6}$/i, "Please enter a valid hex color (e.g., #FF5733)"),
-  get_started_image_attachment: z.any().nullable().optional(),
-  logo_image_attachment: z.any().nullable().optional(),
-  background_image_attachment: z.any().nullable().optional(),
-  frame_image_attachment: z.any().nullable().optional(),
-});
-
-type BrandFormData = z.infer<typeof brandSchema>;
+import { useDebounce } from "@/hooks/use-debounce";
 
 export default function BrandsPage() {
   const queryClient = useQueryClient();
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const [dialogState, setDialogState] = useState<{
+    open: boolean;
+    mode: "create" | "edit";
+    brand?: AppTypes.Brand;
+  }>({
+    open: false,
+    mode: "create",
+    brand: undefined,
+  });
+
   const {
     data: brands,
     isLoading,
+    isFetching,
     error,
   } = useQuery({
-    queryKey: queryKeys.brands,
+    queryKey: api.paginateBrands.getQueryKey({
+      page: 1,
+      limit: 10,
+      keyword: debouncedSearchTerm,
+    }),
     queryFn: () =>
-      api.paginateBrands<AppTypes.PaginatedResponse<AppTypes.Brand>>(),
+      api.paginateBrands<AppTypes.PaginatedResponse<AppTypes.Brand>>({
+        page: 1,
+        limit: 10,
+        keyword: debouncedSearchTerm,
+      }),
     select: (data) => data?.data,
   });
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [shopifyDomain, setShopifyDomain] = useState("");
-
-  // React Hook Form setup
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<BrandFormData>({
-    resolver: zodResolver(brandSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      shopify_shop_name: "",
-      primary_color: "#000000",
-      get_started_image_attachment: null,
-      logo_image_attachment: null,
-      background_image_attachment: null,
-      frame_image_attachment: null,
-    },
-  });
-
-  // Watch shopify shop name for domain preview
-  const shopifyShopName = watch("shopify_shop_name");
-
-  // Update domain when shop name changes
   useEffect(() => {
-    if (shopifyShopName) {
-      setShopifyDomain(`${shopifyShopName}.myshopify.com`);
-    } else {
-      setShopifyDomain("");
+    if (!isLoading && isFirstLoad) {
+      setIsFirstLoad(false);
     }
-  }, [shopifyShopName]);
+  }, [isLoading, isFirstLoad]);
 
-  // Mutations for brand operations
-  const createBrandMutation = useMutation({
-    mutationFn: async (brandData: BrandFormData) => {
-      const getStartedImage = brandData.get_started_image_attachment;
-      if (getStartedImage && getStartedImage instanceof File) {
-        const resp = await uploadFile(getStartedImage, "brand_template");
-        brandData.get_started_image_attachment = resp.data.file_key;
-      }
-
-      if (
-        brandData.logo_image_attachment &&
-        brandData.logo_image_attachment instanceof File
-      ) {
-        const resp = await uploadFile(
-          brandData.logo_image_attachment,
-          "brand_logo"
-        );
-        brandData.logo_image_attachment = resp.data.file_key;
-      }
-
-      if (
-        brandData.background_image_attachment &&
-        brandData.background_image_attachment instanceof File
-      ) {
-        const resp = await uploadFile(
-          brandData.background_image_attachment,
-          "brand_background"
-        );
-        brandData.background_image_attachment = resp.data.file_key;
-      }
-
-      if (
-        brandData.frame_image_attachment &&
-        brandData.frame_image_attachment instanceof File
-      ) {
-        const resp = await uploadFile(
-          brandData.frame_image_attachment,
-          "brand_frame"
-        );
-        brandData.frame_image_attachment = resp.data.file_key;
-      }
-
-      return await api.createBrand<AppTypes.Brand>({
-        ...brandData,
-        shopify_domain: shopifyDomain,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.brands });
-      reset();
-      setShopifyDomain("");
-      setIsCreateDialogOpen(false);
-    },
-  });
+  const isSearching =
+    !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm;
 
   const deleteBrandMutation = useMutation({
     mutationFn: (id: string) => api.deleteBrand({ brand_id: id }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.brands });
+      queryClient.invalidateQueries({
+        queryKey: api.paginateBrands.getQueryKey(),
+      });
     },
   });
-
-  const onSubmit = (data: BrandFormData) => {
-    createBrandMutation.mutate(data);
-  };
 
   const handleDeleteBrand = (id: string) => {
     deleteBrandMutation.mutate(id);
   };
 
-  if (isLoading) {
+  const handleCreateBrand = () => {
+    setDialogState({
+      open: true,
+      mode: "create",
+      brand: undefined,
+    });
+  };
+
+  const handleEditBrand = (brand: AppTypes.Brand) => {
+    setDialogState({
+      open: true,
+      mode: "edit",
+      brand,
+    });
+  };
+
+  const handleDialogClose = () => {
+    setDialogState((prev) => ({ ...prev, open: false }));
+  };
+
+  if (isLoading && isFirstLoad) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -253,273 +130,16 @@ export default function BrandsPage() {
               Manage and monitor all brands on your platform
             </p>
           </div>
-          <Dialog
-            open={isCreateDialogOpen}
-            onOpenChange={setIsCreateDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Brand
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Brand</DialogTitle>
-                <DialogDescription>
-                  Create a new brand profile with complete setup including
-                  Shopify integration and branding assets.
-                </DialogDescription>
-              </DialogHeader>
-
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="grid gap-6 py-4">
-                  {/* Basic Information */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Basic Information</h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Brand Name *</Label>
-                        <Input
-                          id="name"
-                          {...register("name")}
-                          placeholder="Enter brand name"
-                          className={errors.name ? "border-red-500" : ""}
-                        />
-                        {errors.name && (
-                          <p className="text-sm text-red-500">
-                            {errors.name.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email *</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          {...register("email")}
-                          placeholder="contact@brand.com"
-                          className={errors.email ? "border-red-500" : ""}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          This should match the Shopify store owner&apos;s email
-                        </p>
-                        {errors.email && (
-                          <p className="text-sm text-red-500">
-                            {errors.email.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Shopify Integration */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Shopify Integration</h3>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="shopify_shop_name">
-                        Shopify Shop Name *
-                      </Label>
-                      <Input
-                        id="shopify_shop_name"
-                        {...register("shopify_shop_name")}
-                        placeholder="joe-live-launch"
-                        className={
-                          errors.shopify_shop_name ? "border-red-500" : ""
-                        }
-                      />
-                      {shopifyDomain && (
-                        <p className="text-sm text-primary">
-                          Shopify Domain: <strong>{shopifyDomain}</strong>
-                        </p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        Enter your Shopify store name. We&apos;ll verify if this
-                        store exists.
-                      </p>
-                      {errors.shopify_shop_name && (
-                        <p className="text-sm text-red-500">
-                          {errors.shopify_shop_name.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Brand Styling */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Brand Styling</h3>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="primary_color">Primary Color *</Label>
-                      <div className="flex space-x-2">
-                        <Input
-                          id="primary_color"
-                          type="color"
-                          {...register("primary_color")}
-                          className="w-16 h-10 p-1 border rounded-md"
-                        />
-                        <Input
-                          {...register("primary_color")}
-                          placeholder="#000000"
-                          className={`flex-1 ${
-                            errors.primary_color ? "border-red-500" : ""
-                          }`}
-                        />
-                      </div>
-                      {errors.primary_color && (
-                        <p className="text-sm text-red-500">
-                          {errors.primary_color.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Image Uploads */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Brand Assets</h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Logo Upload */}
-                      <DragDropFileUpload
-                        id="logo_image_attachment"
-                        label="Logo Image"
-                        currentFile={watch("logo_image_attachment")}
-                        onFileChange={(file) =>
-                          setValue("logo_image_attachment", file)
-                        }
-                        icon={Image}
-                      />
-
-                      {/* Get Started Image Upload */}
-                      <DragDropFileUpload
-                        id="get_started_image_attachment"
-                        label="Get Started Image"
-                        currentFile={watch("get_started_image_attachment")}
-                        onFileChange={(file) =>
-                          setValue("get_started_image_attachment", file)
-                        }
-                        icon={Upload}
-                        description="Recommended: 1024x1366 (iPad ratio)"
-                      />
-
-                      {/* Background Image Upload */}
-                      <DragDropFileUpload
-                        id="background_image_attachment"
-                        label="Background Image"
-                        currentFile={watch("background_image_attachment")}
-                        onFileChange={(file) =>
-                          setValue("background_image_attachment", file)
-                        }
-                        icon={Palette}
-                        description="Recommended: 1024x1366 (iPad ratio)"
-                      />
-
-                      {/* Frame Image Upload */}
-                      <DragDropFileUpload
-                        id="frame_image_attachment"
-                        label="Frame Image"
-                        currentFile={watch("frame_image_attachment")}
-                        onFileChange={(file) =>
-                          setValue("frame_image_attachment", file)
-                        }
-                        icon={Image}
-                        description="Recommended: 1024x1366 (iPad ratio)"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsCreateDialogOpen(false);
-                      reset();
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting || createBrandMutation.isPending}
-                  >
-                    {(isSubmitting || createBrandMutation.isPending) && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Create Brand
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={handleCreateBrand}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Brand
+          </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Brands
-              </CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{brands?.total_record}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                With Shopify
-              </CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {brands?.records?.filter((b) => b.shopify_id).length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Connected to Shopify
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Fetched Products
-              </CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {brands?.records?.filter((b) => b.has_fetched_products).length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Have fetched products
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Domains Set</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {brands?.records?.filter((b) => b.domain).length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Have custom domain
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <BrandsStatsCards brands={brands} />
 
-        {/* Search and Filters */}
+        {/* Brands Table */}
         <Card>
           <CardHeader>
             <CardTitle>All Brands</CardTitle>
@@ -528,125 +148,25 @@ export default function BrandsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search brands..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Brand</TableHead>
-                    <TableHead>Domain</TableHead>
-                    <TableHead>Shopify Store</TableHead>
-                    <TableHead>Products Fetched</TableHead>
-                    <TableHead>Created Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {brands?.records?.map((brand) => (
-                    <TableRow key={brand.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{brand.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {brand.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {brand.domain || brand.shopify_domain || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={brand.shopify_id ? "default" : "secondary"}
-                        >
-                          {brand.shopify_id ? "Connected" : "Not connected"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            brand.has_fetched_products ? "default" : "secondary"
-                          }
-                        >
-                          {brand.has_fetched_products ? "Yes" : "No"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(brand.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit Brand
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <DropdownMenuItem
-                                  onSelect={(e) => e.preventDefault()}
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete Brand
-                                </DropdownMenuItem>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the brand and all
-                                    associated data.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteBrand(brand.id)}
-                                    disabled={deleteBrandMutation.isPending}
-                                  >
-                                    {deleteBrandMutation.isPending && (
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    )}
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <BrandsTable
+              brands={brands?.records || []}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              onEditBrand={handleEditBrand}
+              onDeleteBrand={handleDeleteBrand}
+              isDeleting={deleteBrandMutation.isPending}
+              isSearching={isSearching}
+            />
           </CardContent>
         </Card>
+
+        {/* Brand Dialog */}
+        <BrandDialog
+          open={dialogState.open}
+          onOpenChange={handleDialogClose}
+          mode={dialogState.mode}
+          brand={dialogState.brand}
+        />
       </div>
     </DashboardLayout>
   );

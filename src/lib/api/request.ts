@@ -34,13 +34,15 @@ const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boo
   options.withCredentials = true
   options.url = url
   options.baseURL = baseURL
-  if (options.method === 'GET') {
+  if (options.method?.toUpperCase() === 'GET') {
     options.params = cloneData
   } else if (data instanceof FormData) {
     options.data = data
   } else {
     options.data = cloneData
   }
+
+  console.log("*** options",options)
   options.paramsSerializer = params => {
     return stringify(params, { arrayFormat: 'repeat' })
   }
