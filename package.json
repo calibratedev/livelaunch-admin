@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "PORT=8000 next dev --turbopack",
-    "build": "next build",
+    "build:dev": "BUILD_ENV=dev next build",
+    "build:prod": "BUILD_ENV=prod next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
