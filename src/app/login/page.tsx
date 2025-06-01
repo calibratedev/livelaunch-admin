@@ -16,7 +16,6 @@ import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/providers/auth";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { queryKeys } from "@/lib/api/query-keys";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,7 +23,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const loginMutation = useMutation({
-    mutationKey: queryKeys.login,
+    mutationKey: api.login.getQueryKey(),
     mutationFn: (data: { email: string; password: string }) =>
       api.login<AppTypes.LoginResponse>(data),
   });

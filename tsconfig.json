@@ -24,11 +24,11 @@
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": [
-    "next-env.d.ts", 
+    "next-env.d.ts",
     "src/types/index.d.ts",
-    "**/*.ts", 
-    "**/*.tsx", 
+    "**/*.ts",
+    "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist", "build", "public", ".next"]
 }
