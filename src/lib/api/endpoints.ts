@@ -1,7 +1,9 @@
 const endpoints = {
-  login: '/api/admin/login',
-  logout: '/api/admin/logout',
-  me: '/api/admin/me',
+  login: 'POST /api/admin/login',
+  logout: 'POST /api/admin/logout',
+  me: 'GET /api/admin/me',
+  updateMe: 'PUT /api/admin/me',
+  updateMePassword: 'PUT /api/admin/me/password',
 
   getS3Signatures: 'POST /api/common/s3_signatures',
   getS3Signature: 'POST /api/common/s3_signature',

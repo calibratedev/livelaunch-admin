@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { MoreHorizontal, Edit, Trash2, Eye, Search, Loader2, Link, Check } from 'lucide-react'
-import { formatDate } from '@/lib/api/date'
+import { formatDate } from '@/lib/date'
 import { DeleteBrandDialog } from './delete-brand-dialog'
 import api from '@/lib/api'
 import { toast } from 'sonner'

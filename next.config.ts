@@ -1,7 +1,18 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
+
+const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL!
+console.log('storageUrl', storageUrl)
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  images: {
+    remotePatterns: [storageUrl]?.map((item) => {
+      const url = new URL(item)
+      return {
+        protocol: 'https',
+        hostname: url.hostname,
+      }
+    }),
+  },
+}
 
-export default nextConfig;
+export default nextConfig

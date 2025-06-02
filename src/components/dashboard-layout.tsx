@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from "@/providers/auth";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useAuth } from '@/providers/auth'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu'
 import {
   BarChart3,
   Building2,
@@ -27,51 +27,53 @@ import {
   Lock,
   Monitor,
   Smartphone,
-} from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import api from "@/lib/api";
-import Link from "next/link";
+} from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
+import api from '@/lib/api'
+import Link from 'next/link'
+import { getFullName, getInitials, toTitleCase } from '@/lib/text'
+import { getAttachmentUrl } from '@/lib/attachment'
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 const navigation = [
-  { name: "Overview", href: "/dashboard", icon: BarChart3 },
-  { name: "Brand Management", href: "/dashboard/brands", icon: Building2 },
-  { name: "Products", href: "/dashboard/products", icon: Package },
+  { name: 'Overview', href: '/dashboard', icon: BarChart3 },
+  { name: 'Brand Management', href: '/dashboard/brands', icon: Building2 },
+  { name: 'Products', href: '/dashboard/products', icon: Package },
   {
-    name: "Device Sessions",
-    href: "/dashboard/device-sessions",
+    name: 'Device Sessions',
+    href: '/dashboard/device-sessions',
     icon: Monitor,
   },
   {
-    name: "Brand Device Sessions",
-    href: "/dashboard/brand-device-sessions",
+    name: 'Brand Device Sessions',
+    href: '/dashboard/brand-device-sessions',
     icon: Smartphone,
   },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
-];
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+]
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
-  const { user } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
+  const { user } = useAuth()
   const logoutMutation = useMutation({
     mutationKey: api.logout.getQueryKey(),
     mutationFn: () => api.logout(),
-  });
+  })
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
-        router.replace("/login");
+        router.replace('/login')
       },
-    });
-  };
+    })
+  }
 
-  const Sidebar = ({ className = "" }: { className?: string }) => (
+  const Sidebar = ({ className = '' }: { className?: string }) => (
     <div className={`flex flex-col ${className}`}>
       <div className="flex items-center px-6 py-4 border-b">
         <div className="flex items-center space-x-2">
@@ -83,29 +85,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
       <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href
           return (
-            <Button
-              key={item.name}
-              asChild
-              variant={isActive ? "default" : "ghost"}
-            >
+            <Button key={item.name} asChild variant={isActive ? 'default' : 'ghost'}>
               <Link
                 href={item.href}
                 className="w-full justify-start"
                 onClick={() => {
-                  setSidebarOpen(false);
+                  setSidebarOpen(false)
                 }}
               >
                 <item.icon className="mr-2 h-4 w-4" />
                 {item.name}
               </Link>
             </Button>
-          );
+          )
         })}
       </nav>
     </div>
-  );
+  )
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -141,29 +139,26 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center space-x-4">
               <Badge variant="secondary" className="hidden sm:flex">
                 <Users className="w-3 h-3 mr-1" />
-                Admin
+                {toTitleCase(user?.role)}
               </Badge>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-8 w-8 rounded-full"
-                  >
+                  <Button variant="ghost" className="cursor-pointer relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="/avatar.png" alt="Admin" />
-                      <AvatarFallback>AD</AvatarFallback>
+                      <AvatarImage src={getAttachmentUrl(user?.avatar)} alt="Admin" />
+                      <AvatarFallback>
+                        {getInitials(user?.first_name, user?.last_name)}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {user?.name || "Admin User"}
-                      </p>
+                      <p className="text-sm font-medium leading-none">{getFullName(user)}</p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {user?.email || "admin@livelaunch.com"}
+                        {user?.email || 'admin@livelaunch.com'}
                       </p>
                     </div>
                   </DropdownMenuLabel>
@@ -193,11 +188,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Page Content */}
         <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            {children}
-          </div>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>
-  );
+  )
 }
