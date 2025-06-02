@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next'
 
 const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL!
-console.log('storageUrl', storageUrl)
 
 const nextConfig: NextConfig = {
   images: {

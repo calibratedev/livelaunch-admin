@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation'
+
 export async function checkAuthStatus(): Promise<AppTypes.User | null> {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/me`, {
@@ -11,6 +13,11 @@ export async function checkAuthStatus(): Promise<AppTypes.User | null> {
     if (response.ok) {
       return (await response.json()) as AppTypes.User
     }
+
+    if (response.status === 401) {
+      redirect('/login')
+    }
+
     return null
   } catch (error) {
     console.error('Error checking auth status:', error)
