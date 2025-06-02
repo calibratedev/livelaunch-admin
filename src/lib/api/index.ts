@@ -4,63 +4,63 @@ import endpoints from './endpoints'
 import config from '@/config'
 
 export interface ApiResponse<T = unknown> {
-  success: boolean;
-  message: string;
-  statusCode: number;
-  code?: number;
-  data: T;
-  msg?: string;
+  success: boolean
+  message: string
+  statusCode: number
+  code?: number
+  data: T
+  msg?: string
 }
 
 type Option = {
-  headers?: object;
-  params?: object;
-};
+  headers?: object
+  params?: object
+}
 
 // Define the type for the getQueryKey function
-type GetQueryKeyFunction = (...optionalParams: unknown[]) => unknown[];
+type GetQueryKeyFunction = (...optionalParams: unknown[]) => unknown[]
 
 // Define the type for each API method with getQueryKey
 type ApiMethodWithQueryKey = {
-  <T>(data?: unknown, option?: Option): Promise<ApiResponse<T>>;
-  getQueryKey: GetQueryKeyFunction;
-};
+  <T>(data?: unknown, option?: Option): Promise<ApiResponse<T>>
+  getQueryKey: GetQueryKeyFunction
+}
 
 // Update APIMap to reflect the actual structure
 type APIMap = {
-  [key in keyof typeof endpoints]: ApiMethodWithQueryKey;
-};
+  [key in keyof typeof endpoints]: ApiMethodWithQueryKey
+}
 
 const gen = (params: string, baseURL = config?.apiUrl) => {
-  let url = params;
-  let method: Method = 'GET';
+  let url = params
+  let method: Method = 'GET'
 
-  const paramsArray = params.split(' ');
+  const paramsArray = params.split(' ')
   if (paramsArray.length === 2) {
-    method = paramsArray[0] as Method;
-    url = paramsArray?.[1];
+    method = paramsArray[0] as Method
+    url = paramsArray?.[1]
   }
 
   return function (data: unknown, options: Option) {
     return request(url, {
-      data: method === 'GET' ? null : data,
       method,
-      params: options?.params ? options?.params : method === 'GET' ? data : null,
       baseURL,
+      data,
+      params: options?.params,
       headers: options?.headers,
-    });
-  };
-};
-
-// Update the Api object typing
-const Api: Partial<APIMap> = {};
-
-for (const key in endpoints) {
-  if (Object.prototype.hasOwnProperty.call(endpoints, key)) {
-    const apiMethod = gen(endpoints[key as keyof typeof endpoints], ) as ApiMethodWithQueryKey;
-    apiMethod['getQueryKey'] = (...params: unknown[]) => [key, ...params];
-    Api[key as keyof typeof endpoints] = apiMethod;
+    })
   }
 }
 
-export default Api as APIMap;
+// Update the Api object typing
+const Api: Partial<APIMap> = {}
+
+for (const key in endpoints) {
+  if (Object.prototype.hasOwnProperty.call(endpoints, key)) {
+    const apiMethod = gen(endpoints[key as keyof typeof endpoints]) as ApiMethodWithQueryKey
+    apiMethod['getQueryKey'] = (...params: unknown[]) => [key, ...params]
+    Api[key as keyof typeof endpoints] = apiMethod
+  }
+}
+
+export default Api as APIMap

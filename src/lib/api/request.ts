@@ -4,7 +4,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { stringify } from 'qs'
 
 const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boolean }) => {
-  const { data, baseURL,  } = options
+  const { data, baseURL } = options
 
   const cloneData = cloneDeep(data)
 
@@ -27,7 +27,7 @@ const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boo
       }
     }
     url = domain + url //why do we need split the URL and then join it back together?
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     console.error(e?.message)
   }
@@ -42,29 +42,28 @@ const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boo
     options.data = cloneData
   }
 
-  console.log("*** options",options)
-  options.paramsSerializer = params => {
+  console.log('*** options', options)
+  options.paramsSerializer = (params) => {
     return stringify(params, { arrayFormat: 'repeat' })
   }
 
   return axios(options)
-    .then(response => {
+    .then((response) => {
       const { statusText, status, data } = response
 
       const result = {
         success: true,
         message: statusText,
         statusCode: status,
-        data
+        data,
       }
 
       return Promise.resolve(result)
     })
-    .catch(error => {
+    .catch((error) => {
       const { status } = error.response || {}
 
       if (status === 401 || status === 403) {
-       
       }
 
       if (status <= 504 && status >= 500) {
@@ -72,7 +71,7 @@ const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boo
       }
       if (status >= 404 && status < 422) {
       }
-      /* eslint-disable */
+
       return Promise.reject(error?.response?.data || error)
     })
 }
