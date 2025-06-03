@@ -1,12 +1,5 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -14,21 +7,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Search, MoreHorizontal, Eye, Loader2 } from "lucide-react";
+} from '@/components/ui/table'
+import { Search, Loader2 } from 'lucide-react'
 
 interface BrandDeviceSessionsTableProps {
-  brandDeviceSessions?: AppTypes.PaginatedResponse<AppTypes.BrandDeviceSession>;
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  isSearching?: boolean;
+  brandDeviceSessions?: AppTypes.PaginatedResponse<AppTypes.BrandDeviceSession>
+  searchTerm: string
+  onSearchChange: (value: string) => void
+  isSearching?: boolean
 }
 
 export default function BrandDeviceSessionsTable({
@@ -41,9 +27,7 @@ export default function BrandDeviceSessionsTable({
     <Card>
       <CardHeader>
         <CardTitle>All Brand Device Sessions</CardTitle>
-        <CardDescription>
-          A list of all brand device sessions on your platform
-        </CardDescription>
+        <CardDescription>A list of all brand device sessions on your platform</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-2 mb-4">
@@ -71,7 +55,6 @@ export default function BrandDeviceSessionsTable({
                 <TableHead>IP Address</TableHead>
                 <TableHead>Timezone</TableHead>
                 <TableHead>Created Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,7 +63,7 @@ export default function BrandDeviceSessionsTable({
                   <TableCell>
                     <div>
                       <div className="font-medium text-sm">
-                        {session.device_name || "Unknown Device"}
+                        {session.device_name || 'Unknown Device'}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {session.device_id?.substring(0, 16)}...
@@ -90,54 +73,30 @@ export default function BrandDeviceSessionsTable({
                   <TableCell>
                     <div>
                       <div className="font-medium text-sm">
-                        {session.app_name || "N/A"} v
-                        {session.app_version || "N/A"}
+                        {session.app_name || 'N/A'} v{session.app_version || 'N/A'}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {session.app_platform || "Unknown"}
+                        {session.app_platform || 'Unknown'}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium text-sm">
-                        {session.region_code || "N/A"}
-                      </div>
+                      <div className="font-medium text-sm">{session.region_code || 'N/A'}</div>
                       {session.latitude && session.longitude && (
                         <div className="text-sm text-muted-foreground">
-                          {session.latitude.toFixed(2)},{" "}
-                          {session.longitude.toFixed(2)}
+                          {session.latitude.toFixed(2)}, {session.longitude.toFixed(2)}
                         </div>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="font-mono text-sm">
-                      {session.ip_address || "N/A"}
-                    </span>
+                    <span className="font-mono text-sm">{session.ip_address || 'N/A'}</span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{session.timezone || "N/A"}</span>
+                    <span className="text-sm">{session.timezone || 'N/A'}</span>
                   </TableCell>
-                  <TableCell>
-                    {new Date(session.created_at * 1000).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  <TableCell>{new Date(session.created_at * 1000).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -145,5 +104,5 @@ export default function BrandDeviceSessionsTable({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

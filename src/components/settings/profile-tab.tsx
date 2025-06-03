@@ -159,7 +159,7 @@ export default function ProfileTab() {
             <Separator />
 
             <div className="flex justify-end">
-              <Button type="submit">
+              <Button loading={form.formState.isSubmitting} type="submit">
                 <Save className="mr-2 h-4 w-4" />
                 Save Changes
               </Button>

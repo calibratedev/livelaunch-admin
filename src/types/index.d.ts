@@ -148,7 +148,6 @@ declare global {
       user_agent: string
       ip_address: string
       email: string
-      accept_consent: boolean
     }
 
     export interface DashboardStats {
