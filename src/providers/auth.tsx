@@ -67,7 +67,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       const handleRedirect = (loggedUser: AppTypes.User | null) => {
         console.log('***** handleRedirect handleRedirect', loggedUser, pathname)
         if (!loggedUser) {
-          if (authenticatedRoutes.includes(pathname) || pathname === '/') {
+          if (authenticatedRoutes.some((route) => pathname.includes(route)) || pathname === '/') {
             router.push('/login?redirect=' + pathname)
           }
         } else {

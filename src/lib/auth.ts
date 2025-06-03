@@ -10,12 +10,13 @@ export async function checkAuthStatus(): Promise<AppTypes.User | null> {
       },
     })
 
+    console.log('***** response', response.status)
     if (response.ok) {
       return (await response.json()) as AppTypes.User
     }
 
     if (response.status === 401) {
-      redirect('/login')
+      return redirect('/login')
     }
 
     return null
