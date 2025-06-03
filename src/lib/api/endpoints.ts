@@ -1,6 +1,4 @@
 const endpoints = {
-  login: 'POST /api/admin/login',
-  logout: 'POST /api/admin/logout',
   me: 'GET /api/admin/me',
   updateMe: 'PUT /api/admin/me',
   updateMePassword: 'PUT /api/admin/me/password',

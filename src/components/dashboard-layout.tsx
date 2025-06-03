@@ -28,8 +28,6 @@ import {
   Monitor,
   Smartphone,
 } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
-import api from '@/lib/api'
 import Link from 'next/link'
 import { getFullName, getInitials, toTitleCase } from '@/lib/text'
 import { getAttachmentUrl } from '@/lib/attachment'
@@ -60,16 +58,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
-  const logoutMutation = useMutation({
-    mutationKey: api.logout.getQueryKey(),
-    mutationFn: () => api.logout(),
-  })
 
   const handleLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSuccess: () => {
-        router.replace('/login')
-      },
+    fetch('/api/logout').finally(() => {
+      router.replace('/login')
     })
   }
 
