@@ -196,7 +196,9 @@ export default function ProductsTable({
                         <img
                           src={product.image}
                           alt={product.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(product.image, '_blank')}
+                          title="Click to preview image"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">

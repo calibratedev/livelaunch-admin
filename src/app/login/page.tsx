@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { useAuth } from '@/providers/auth'
 import { useMutation } from '@tanstack/react-query'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -55,9 +56,7 @@ export default function LoginPage() {
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <Lock className="w-4 h-4 text-white" />
-              </div>
+              <Image src="/logo.png" alt="LiveLaunch" width={32} height={32} />
               <span className="text-2xl font-bold text-gray-900 dark:text-white">LiveLaunch</span>
             </div>
           </div>

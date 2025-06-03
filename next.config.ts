@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
       }
     }),
   },
+  env: {
+    BUILD_DATE: new Date().toISOString(),
+  },
 }
 
 export default nextConfig

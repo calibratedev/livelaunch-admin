@@ -24,13 +24,14 @@ import {
   Settings,
   User,
   Users,
-  Lock,
   Monitor,
   Smartphone,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getFullName, getInitials, toTitleCase } from '@/lib/text'
 import { getAttachmentUrl } from '@/lib/attachment'
+import { formatDate } from '@/lib/date'
+import Image from 'next/image'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -66,11 +67,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const Sidebar = ({ className = '' }: { className?: string }) => (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex flex-col h-full ${className}`}>
       <div className="flex items-center px-6 py-4 border-b">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Lock className="w-4 h-4 text-white" />
+          <div className="w-8 h-8">
+            <Image src="/logo.png" alt="LiveLaunch" width={32} height={32} />
           </div>
           <span className="text-xl font-bold">LiveLaunch</span>
         </div>
@@ -94,6 +95,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )
         })}
       </nav>
+      {process.env.BUILD_DATE && (
+        <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {formatDate(process.env.BUILD_DATE, 'MMM DD, HH:mm')}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 
