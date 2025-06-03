@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies()
     cookieStore.set('token', response.token, {
       httpOnly: true,
+      domain: '.livelaunch.io	',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
