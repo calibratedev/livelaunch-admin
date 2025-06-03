@@ -1,20 +1,14 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -22,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,27 +35,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  Loader2,
-} from "lucide-react";
+} from '@/components/ui/dropdown-menu'
+import { Search, MoreHorizontal, Edit, Trash2, Eye, Loader2, QrCode } from 'lucide-react'
+import { formatDate } from '@/lib/date'
+import { toTitleCase } from '@/lib/text'
+import { formatMoney } from '@/lib/money'
+import { useState } from 'react'
+import { ProductQRModal } from './product-qr-modal'
 
 interface ProductsTableProps {
-  products?: AppTypes.PaginatedResponse<AppTypes.Product>;
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  selectedCategory: string;
-  onCategoryChange: (value: string) => void;
-  selectedStatus: string;
-  onStatusChange: (value: string) => void;
-  onDeleteProduct: (id: string) => void;
-  isDeleting: boolean;
-  isSearching?: boolean;
+  products?: AppTypes.PaginatedResponse<AppTypes.Product>
+  searchTerm: string
+  onSearchChange: (value: string) => void
+  selectedCategory: string
+  onCategoryChange: (value: string) => void
+  selectedStatus: string
+  onStatusChange: (value: string) => void
+  onDeleteProduct: (id: string) => void
+  isDeleting: boolean
+  isSearching?: boolean
 }
 
 export default function ProductsTable({
@@ -76,51 +68,69 @@ export default function ProductsTable({
   isDeleting,
   isSearching,
 }: ProductsTableProps) {
+  const [qrModalState, setQrModalState] = useState<{
+    open: boolean
+    product?: AppTypes.Product
+  }>({
+    open: false,
+    product: undefined,
+  })
+
   // Get unique categories and statuses from actual data
   const uniqueCategories = [
-    "All",
+    'All',
     ...new Set(products?.records?.map((p) => p.category).filter(Boolean) || []),
-  ];
+  ]
   const uniqueStatuses = [
-    "All",
+    'All',
     ...new Set(products?.records?.map((p) => p.status).filter(Boolean) || []),
-  ];
+  ]
 
   const filteredProducts =
     products?.records?.filter((product) => {
       const matchesSearch =
         product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.brand?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "All" || product.category === selectedCategory;
-      const matchesStatus =
-        selectedStatus === "All" || product.status === selectedStatus;
+        product.brand?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
+      const matchesStatus = selectedStatus === 'All' || product.status === selectedStatus
 
-      return matchesSearch && matchesCategory && matchesStatus;
-    }) || [];
+      return matchesSearch && matchesCategory && matchesStatus
+    }) || []
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "default";
-      case "draft":
-        return "secondary";
-      case "pending":
-        return "outline";
-      case "archived":
-        return "destructive";
+      case 'active':
+        return 'default'
+      case 'draft':
+        return 'secondary'
+      case 'pending':
+        return 'outline'
+      case 'archived':
+        return 'destructive'
       default:
-        return "secondary";
+        return 'secondary'
     }
-  };
+  }
+
+  const handleQRClick = (product: AppTypes.Product) => {
+    setQrModalState({
+      open: true,
+      product,
+    })
+  }
+
+  const handleQRModalClose = () => {
+    setQrModalState({
+      open: false,
+      product: undefined,
+    })
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>All Products</CardTitle>
-        <CardDescription>
-          A list of all products across all brands on your platform
-        </CardDescription>
+        <CardDescription>A list of all products across all brands on your platform</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-2 mb-4">
@@ -166,6 +176,7 @@ export default function ProductsTable({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Image</TableHead>
                 <TableHead>Product</TableHead>
                 <TableHead>Brand</TableHead>
                 <TableHead>Category</TableHead>
@@ -180,34 +191,48 @@ export default function ProductsTable({
               {filteredProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
+                    <div className="w-10 h-10 rounded overflow-hidden bg-gray-100">
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <Eye className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div>
                       <div className="font-medium">{product.title}</div>
                       <div className="text-sm text-muted-foreground">
-                        Created:{" "}
-                        {new Date(product.created_at).toLocaleDateString()}
+                        Created: {formatDate(product.created_at)}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{product.brand?.name || "N/A"}</TableCell>
+                  <TableCell>{product.brand?.name || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{product.category || "N/A"}</Badge>
+                    <Badge variant="outline">{product.category || 'N/A'}</Badge>
                   </TableCell>
-                  <TableCell>${product.price || 0}</TableCell>
+                  <TableCell>{formatMoney(product.price || 0)}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
                         getStatusColor(product.status) as
-                          | "default"
-                          | "secondary"
-                          | "destructive"
-                          | "outline"
+                          | 'default'
+                          | 'secondary'
+                          | 'destructive'
+                          | 'outline'
                       }
                     >
-                      {product.status}
+                      {toTitleCase(product.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell>{product.handle || "N/A"}</TableCell>
-                  <TableCell>{product.product_type || "N/A"}</TableCell>
+                  <TableCell>{product.handle || 'N/A'}</TableCell>
+                  <TableCell>{product.product_type || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -225,12 +250,14 @@ export default function ProductsTable({
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Product
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleQRClick(product)}>
+                          <QrCode className="mr-2 h-4 w-4" />
+                          QR Code
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <DropdownMenuItem
-                              onSelect={(e) => e.preventDefault()}
-                            >
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete Product
                             </DropdownMenuItem>
@@ -239,9 +266,8 @@ export default function ProductsTable({
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will
-                                permanently delete the product and all
-                                associated data.
+                                This action cannot be undone. This will permanently delete the
+                                product and all associated data.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -250,9 +276,7 @@ export default function ProductsTable({
                                 onClick={() => onDeleteProduct(product.id)}
                                 disabled={isDeleting}
                               >
-                                {isDeleting && (
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                )}
+                                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>
@@ -266,7 +290,14 @@ export default function ProductsTable({
             </TableBody>
           </Table>
         </div>
+
+        {/* QR Modal */}
+        <ProductQRModal
+          open={qrModalState.open}
+          onOpenChange={handleQRModalClose}
+          product={qrModalState.product}
+        />
       </CardContent>
     </Card>
-  );
+  )
 }

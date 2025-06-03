@@ -1,22 +1,21 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import DashboardLayout from "@/components/dashboard-layout";
-import { Loader2 } from "lucide-react";
-import api from "@/lib/api";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useDebounce } from "@/hooks/use-debounce";
-import ProductsStats from "@/components/products/products-stats";
-import ProductsTable from "@/components/products/products-table";
+import { useState, useEffect } from 'react'
+import DashboardLayout from '@/components/dashboard-layout'
+import { Loader2 } from 'lucide-react'
+import api from '@/lib/api'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useDebounce } from '@/hooks/use-debounce'
+import ProductsTable from '@/components/products/products-table'
 
 export default function ProductsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedStatus, setSelectedStatus] = useState("All");
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedStatus, setSelectedStatus] = useState('All')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const {
     data: products,
     isLoading,
@@ -33,16 +32,15 @@ export default function ProductsPage() {
         limit: 10,
       }),
     select: (data) => data?.data,
-  });
+  })
 
   useEffect(() => {
     if (!isLoading && isFirstLoad) {
-      setIsFirstLoad(false);
+      setIsFirstLoad(false)
     }
-  }, [isLoading, isFirstLoad]);
+  }, [isLoading, isFirstLoad])
 
-  const isSearching =
-    !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm;
+  const isSearching = !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm
 
   // Mutations for product operations
   const deleteProductMutation = useMutation({
@@ -50,13 +48,13 @@ export default function ProductsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: api.paginateProducts.getQueryKey(),
-      });
+      })
     },
-  });
+  })
 
   const handleDeleteProduct = (id: string) => {
-    deleteProductMutation.mutate(id);
-  };
+    deleteProductMutation.mutate(id)
+  }
 
   if (isLoading && isFirstLoad) {
     return (
@@ -65,19 +63,17 @@ export default function ProductsPage() {
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </DashboardLayout>
-    );
+    )
   }
 
   if (error) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-red-500">
-            Error loading products: {error.message}
-          </p>
+          <p className="text-red-500">Error loading products: {error.message}</p>
         </div>
       </DashboardLayout>
-    );
+    )
   }
 
   return (
@@ -86,17 +82,12 @@ export default function ProductsPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Product Management
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight">Product Management</h1>
             <p className="text-muted-foreground">
               Manage and monitor all products across your platform
             </p>
           </div>
         </div>
-
-        {/* Stats Cards */}
-        <ProductsStats products={products} />
 
         {/* Table */}
         <ProductsTable
@@ -113,5 +104,5 @@ export default function ProductsPage() {
         />
       </div>
     </DashboardLayout>
-  );
+  )
 }

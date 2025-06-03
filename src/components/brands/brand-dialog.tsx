@@ -19,6 +19,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { DragDropFileUpload } from '@/components/drag-drop-file-upload'
 import { uploadFile } from '@/lib/api/upload'
+import Link from 'next/link'
 
 // Zod schema for brand validation
 const brandSchema = z.object({
@@ -291,15 +292,24 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
                   {...register('shopify_shop_name')}
                   placeholder="joe-live-launch"
                   className={errors.shopify_shop_name ? 'border-red-500' : ''}
+                  disabled={mode === 'edit' && !!brand?.shopify_id}
                 />
                 {shopifyDomain && (
                   <p className="text-sm text-primary">
                     Shopify Domain: <strong>{shopifyDomain}</strong>
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">
-                  Enter your Shopify store name. We&apos;ll verify if this store exists.
-                </p>
+                {mode === 'edit' && brand?.shopify_id ? (
+                  <p className="text-xs text-amber-600 font-medium">
+                    ⚠️ Shopify shop name cannot be changed once connected.
+                    <Link href="mailto:support@livelaunch.io">Contact support</Link> if you need to
+                    change this.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Enter your Shopify store name. We&apos;ll verify if this store exists.
+                  </p>
+                )}
                 {errors.shopify_shop_name && (
                   <p className="text-sm text-red-500">{errors.shopify_shop_name.message}</p>
                 )}
