@@ -4,7 +4,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { stringify } from 'qs'
 
 const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boolean }) => {
-  const { data, baseURL } = options
+  const { data, baseURL, headers = { 'Content-Type': 'application/json' } } = options
 
   const cloneData = cloneDeep(data)
 
@@ -34,6 +34,7 @@ const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boo
   options.withCredentials = true
   options.url = url
   options.baseURL = baseURL
+  options.headers = headers
   if (options.method?.toUpperCase() === 'GET') {
     options.params = cloneData
   } else if (data instanceof FormData) {
@@ -42,7 +43,6 @@ const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boo
     options.data = cloneData
   }
 
-  console.log('*** options', options)
   options.paramsSerializer = (params) => {
     return stringify(params, { arrayFormat: 'repeat' })
   }
