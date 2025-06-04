@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import type { NextConfig } from 'next'
 
 const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL!
@@ -12,9 +13,7 @@ const nextConfig: NextConfig = {
       }
     }),
   },
-  env: {
-    BUILD_DATE: new Date().toISOString(),
-  },
+  env: env,
 }
 
 export default nextConfig

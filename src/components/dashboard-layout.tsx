@@ -32,6 +32,9 @@ import { getFullName, getInitials, toTitleCase } from '@/lib/text'
 import { getAttachmentUrl } from '@/lib/attachment'
 import { formatDate } from '@/lib/date'
 import Image from 'next/image'
+import { useMutation } from '@tanstack/react-query'
+import Api from '@/lib/api'
+import { deleteCookie } from 'cookies-next/client'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -59,12 +62,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
-
-  const handleLogout = () => {
-    fetch('/api/logout').finally(() => {
+  const logoutMutation = useMutation({
+    mutationFn: () => Api.logout(),
+    onSuccess: () => {
+      deleteCookie('token')
       router.replace('/login')
-    })
-  }
+    },
+  })
 
   const Sidebar = ({ className = '' }: { className?: string }) => (
     <div className={`flex flex-col h-full ${className}`}>
@@ -178,7 +182,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>

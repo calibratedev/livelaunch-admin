@@ -10,43 +10,39 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { useAuth } from '@/providers/auth'
 import { useMutation } from '@tanstack/react-query'
 import Image from 'next/image'
+import { toast } from 'sonner'
+import Api from '@/lib/api'
+import { setCookie } from 'cookies-next/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
+  const { refetchUser } = useAuth()
+
   const loginMutation = useMutation({
-    mutationKey: ['login'],
-    mutationFn: (data: { email: string; password: string }) =>
-      fetch(`/api/login`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }).then((res) => res.json()),
+    mutationFn: (data: AppTypes.LoginForm) => Api.login<AppTypes.LoginResponse>(data),
+    onSuccess: async (data) => {
+      console.log('***** data', data)
+      if (!data?.success) {
+        toast.error(data?.message || 'Login failed')
+      } else {
+        setCookie('token', data?.data?.token)
+        await refetchUser()
+        router.replace('/dashboard')
+      }
+    },
     onError: (error) => {
-      console.error('Login failed:', error)
+      toast.error(error?.message || 'Login failed')
     },
   })
-  const { setUser } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (email && password) {
-      loginMutation.mutate(
-        { email, password },
-        {
-          onSuccess: async (data) => {
-            setUser(data?.data?.user)
-            // Refetch user data after successful login
-            router.push('/dashboard')
-          },
-          onError: (error) => {
-            console.error('Login failed:', error)
-            // You can add toast notification here
-          },
-        },
-      )
+      loginMutation.mutate({ email, password })
     }
   }
 

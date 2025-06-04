@@ -1,9 +1,8 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { checkAuthStatus } from '@/lib/auth'
+import React, { createContext, useContext, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Api from '@/lib/api'
 import { uploadFile } from '@/lib/api/upload'
 
@@ -11,23 +10,29 @@ const authenticatedRoutes = ['/dashboard']
 
 type UpdateMeData = Partial<Omit<AppTypes.User, 'id' | 'role'>>
 interface AuthContextType {
-  user: AppTypes.User | null
+  user: AppTypes.User | undefined
   isLoading: boolean
   isAuthenticated: boolean
   refetchUser: () => Promise<void>
-  setUser: (user: AppTypes.User | null) => void
   updateMe: (data: UpdateMeData) => Promise<AppTypes.User>
+  setUser: (user: Partial<AppTypes.User> | undefined) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const [user, setUser] = useState<AppTypes.User | null>(null)
-  const [isInitializing, setIsInitializing] = useState(true)
-  const [isLoading, setIsLoading] = useState(true)
   const pathname = usePathname()
-
+  const queryClient = useQueryClient()
+  const {
+    data: user,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: Api.me.getQueryKey(),
+    queryFn: () => Api.me<AppTypes.User>(),
+    select: (data) => data?.data,
+  })
   const { mutateAsync: updateMe } = useMutation({
     mutationKey: Api.updateMe.getQueryKey(),
     mutationFn: async (data: UpdateMeData) => {
@@ -39,32 +44,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       return response.data
     },
     onSuccess: (data) => {
-      setUser(data)
+      queryClient.setQueryData(Api.me.getQueryKey(), data)
     },
   })
-  const fetchUser = async () => {
-    try {
-      setIsLoading(true)
-      const authUser = await checkAuthStatus()
-      setUser(authUser)
-    } catch (error) {
-      console.error('Error fetching user:', error)
-      setUser(null)
-    } finally {
-      setIsInitializing(false)
-      setIsLoading(false)
-    }
-  }
 
   const handleUpdateMe = async (data: UpdateMeData) => await updateMe(data)
 
   useEffect(() => {
-    fetchUser()
-  }, [])
-
-  useEffect(() => {
-    if (!isInitializing) {
-      const handleRedirect = (loggedUser: AppTypes.User | null) => {
+    if (!isLoading) {
+      const handleRedirect = (loggedUser: AppTypes.User | undefined) => {
         console.log('***** handleRedirect handleRedirect', loggedUser, pathname)
         if (!loggedUser) {
           if (authenticatedRoutes.some((route) => pathname.includes(route)) || pathname === '/') {
@@ -78,10 +66,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       handleRedirect(user)
     }
-  }, [user, isInitializing, pathname, router])
+  }, [user, isLoading, pathname, router])
 
   const refetchUser = async () => {
-    await fetchUser()
+    await refetch()
+  }
+
+  const handleSetUser = (user: Partial<AppTypes.User> | undefined) => {
+    queryClient.setQueryData(Api.me.getQueryKey(), user)
   }
 
   const value: AuthContextType = {
@@ -89,8 +81,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isAuthenticated: !!user,
     refetchUser,
-    setUser,
     updateMe: handleUpdateMe,
+    setUser: handleSetUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

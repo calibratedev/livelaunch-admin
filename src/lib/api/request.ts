@@ -1,3 +1,6 @@
+'use client'
+import { getCookie } from 'cookies-next/client'
+
 import axios, { AxiosRequestConfig } from 'axios'
 import { compile, parse } from 'path-to-regexp'
 import cloneDeep from 'lodash.clonedeep'
@@ -31,10 +34,15 @@ const request = (url: string, options: AxiosRequestConfig & { isAuthorized?: boo
   } catch (e: any) {
     console.error(e?.message)
   }
-  options.withCredentials = true
   options.url = url
   options.baseURL = baseURL
   options.headers = headers
+
+  const token = getCookie('token')
+  console.log('***** token', token)
+  if (token) {
+    options.headers.Authorization = `Bearer ${token}`
+  }
   if (options.method?.toUpperCase() === 'GET') {
     options.params = cloneData
   } else if (data instanceof FormData) {
