@@ -181,6 +181,7 @@ export default function ProductsTable({
                 <TableHead>Brand</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead>Variants</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Handle</TableHead>
                 <TableHead>Type</TableHead>
@@ -219,7 +220,33 @@ export default function ProductsTable({
                   <TableCell>
                     <Badge variant="outline">{product.category || 'N/A'}</Badge>
                   </TableCell>
-                  <TableCell>{formatMoney(product.price || 0)}</TableCell>
+                  <TableCell>
+                    {product.variants && product.variants.length > 0
+                      ? formatMoney(parseFloat(product.variants[0].price) || 0)
+                      : formatMoney(product.price || 0)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-1">
+                      <Badge variant="outline" className="text-xs">
+                        {product.variants?.length || 0}{' '}
+                        {(product.variants?.length || 0) === 1 ? 'variant' : 'variants'}
+                      </Badge>
+                      {product.variants && product.variants.length > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          {product.variants.slice(0, 2).map((variant, index) => (
+                            <div key={variant.id} className="truncate max-w-[100px]">
+                              {variant.title || `Variant ${index + 1}`}
+                            </div>
+                          ))}
+                          {product.variants.length > 2 && (
+                            <div className="text-muted-foreground">
+                              +{product.variants.length - 2} more
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={

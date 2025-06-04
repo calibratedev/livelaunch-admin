@@ -68,12 +68,14 @@ export function ProductQRModal({ open, onOpenChange, product }: ProductQRModalPr
   const generateBrandLinkMutation = useMutation({
     mutationFn: async (productId: string) => {
       // Replace with your actual API endpoint for generating brand links
-      return await api.generateProductBranchLink<AppTypes.Product>({ product_id: productId })
+      return await api.generateProductScanUrl<AppTypes.GenerateProductScanUrlResponse>({
+        product_id: productId,
+      })
     },
     onSuccess: (response) => {
-      const brandLink = response.data.branch_link
+      const brandLink = response.data.link
       generateQRCode(brandLink)
-      toast.success('Brand link generated successfully!')
+      toast.success('Scan URL generated!')
     },
     onError: (error) => {
       console.error('Failed to generate brand link:', error)
@@ -182,11 +184,11 @@ export function ProductQRModal({ open, onOpenChange, product }: ProductQRModalPr
               <div className="space-y-4">
                 <div className="flex items-center justify-center space-x-2 text-amber-600">
                   <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm font-medium">No valid brand link found</span>
+                  <span className="text-sm font-medium">No valid scan URL found</span>
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                  Generate a brand link first to create the QR code
+                  Generate a scan URL first to create the QR code
                 </p>
 
                 {qrCodeDataUrl ? (
@@ -209,7 +211,7 @@ export function ProductQRModal({ open, onOpenChange, product }: ProductQRModalPr
                     {generateBrandLinkMutation.isPending && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Generate Brand Link & QR Code
+                    Generate Scan URL & QR Code
                   </Button>
                 )}
               </div>

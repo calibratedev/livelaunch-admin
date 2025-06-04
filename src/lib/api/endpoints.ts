@@ -20,7 +20,7 @@ const endpoints = {
   updateBrandProduct: 'PUT /api/admin/brand_products/:product_id',
   deleteBrandProduct: 'DELETE /api/admin/brand_products/:product_id',
   paginateProducts: '/api/admin/brand_products',
-  generateProductBranchLink: 'POST /api/admin/brand_products/:product_id/branch_link',
+  generateProductScanUrl: 'POST /api/admin/brand_products/:product_id/scan_url',
 
   getProduct: '/api/admin/brand_products/:product_id',
   paginateDeviceSessions: '/api/admin/device_sessions',

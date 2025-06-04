@@ -118,6 +118,24 @@ declare global {
       image: string
       category: string
       branch_link: string
+
+      variants: ProductVariant[]
+    }
+
+    export interface ProductVariant {
+      id: number
+      product_id: number
+      title: string
+      position: number
+      inventory_policy: string
+      price: string
+      inventory_item_id: number
+      option1: string
+      created_at: string
+      updated_at: string
+      taxable: boolean
+      requires_shipping: boolean
+      admin_graphql_api_id: string
     }
 
     export type BrandDeviceSession = {
@@ -157,6 +175,11 @@ declare global {
       revenue: string
       recentBrands: Brand[]
       recentProducts: Product[]
+    }
+
+    export interface GenerateProductScanUrlResponse {
+      link: string
+      product_id: string
     }
   }
 }

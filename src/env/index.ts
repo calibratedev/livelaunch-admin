@@ -21,6 +21,3 @@ const config = {
 export const env = config[buildEnv as keyof typeof config]
 
 export type Env = typeof env
-
-console.log('Using env: ', buildEnv)
-console.log(env)
