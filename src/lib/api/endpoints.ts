@@ -27,6 +27,10 @@ const endpoints = {
   getDeviceSession: '/api/admin/device_sessions/:session_id',
   paginateBrandDeviceSessions: '/api/admin/brand_device_sessions',
   getBrandDeviceSession: '/api/admin/brand_device_sessions/:session_id',
+
+  getSocialAccounts: '/api/admin/social_accounts',
+  createSocialAccount: 'POST /api/admin/social_accounts',
+  removeSocialAccount: 'DELETE /api/admin/social_accounts/:platform',
 }
 
 export default endpoints

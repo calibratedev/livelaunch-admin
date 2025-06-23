@@ -181,6 +181,13 @@ declare global {
       link: string
       product_id: string
     }
+
+    export interface SocialAccount {
+      id: string
+      account_id: string
+      account_name: string
+      platform: 'instagram' | 'tiktok'
+    }
   }
 }
 

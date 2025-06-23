@@ -6,9 +6,33 @@ import ProfileTab from '@/components/settings/profile-tab'
 import SecurityTab from '@/components/settings/security-tab'
 import NotificationsTab from '@/components/settings/notifications-tab'
 import SystemTab from '@/components/settings/system-tab'
-import { User, Bell, Shield, Database } from 'lucide-react'
+import { User, Bell, Shield, Database, Instagram } from 'lucide-react'
+import SocialAccountTab from '@/components/settings/social-account-tab'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useCallback, useEffect } from 'react'
+import { toast } from 'sonner'
 
-export default function SettingsPage() {
+function SettingsPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const tab = searchParams.get('tab') || 'profile'
+
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (!!error) {
+      toast.error(error)
+    }
+  }, [])
+
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(Array.from(searchParams.entries()))
+      params.set('tab', value)
+      router.replace(`?${params.toString()}`)
+    },
+    [router, searchParams],
+  )
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -18,8 +42,8 @@ export default function SettingsPage() {
           <p className="text-muted-foreground">Manage your account settings and preferences</p>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs value={tab} onValueChange={handleTabChange} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">
               <User className="mr-2 h-4 w-4" />
               Profile
@@ -35,6 +59,10 @@ export default function SettingsPage() {
             <TabsTrigger value="system">
               <Database className="mr-2 h-4 w-4" />
               System
+            </TabsTrigger>
+            <TabsTrigger value="social">
+              <Instagram className="mr-2 h-4 w-4" />
+              Social Account
             </TabsTrigger>
           </TabsList>
 
@@ -53,8 +81,19 @@ export default function SettingsPage() {
           <TabsContent value="system" className="space-y-4">
             <SystemTab />
           </TabsContent>
+
+          <TabsContent value="social" className="space-y-4">
+            <SocialAccountTab />
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
+  )
+}
+export default function Page() {
+  return (
+    <Suspense>
+      <SettingsPage />
+    </Suspense>
   )
 }
