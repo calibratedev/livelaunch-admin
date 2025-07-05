@@ -98,6 +98,11 @@ declare global {
       frame_image_attachment: Attachment
     }
 
+    export interface ProductCategory {
+      name: string
+      full_name: string
+    }
+
     export interface Product {
       id: string
       created_at: string
@@ -116,7 +121,7 @@ declare global {
       status: string
       tags: string
       image: string
-      category: string
+      category: ProductCategory
       branch_link: string
 
       variants: ProductVariant[]

@@ -79,7 +79,7 @@ export default function ProductsTable({
   // Get unique categories and statuses from actual data
   const uniqueCategories = [
     'All',
-    ...new Set(products?.records?.map((p) => p.category).filter(Boolean) || []),
+    ...new Set(products?.records?.map((p) => p.category?.name).filter(Boolean) || []),
   ]
   const uniqueStatuses = [
     'All',
@@ -91,7 +91,8 @@ export default function ProductsTable({
       const matchesSearch =
         product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.brand?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
+      const matchesCategory =
+        selectedCategory === 'All' || product.category?.name === selectedCategory
       const matchesStatus = selectedStatus === 'All' || product.status === selectedStatus
 
       return matchesSearch && matchesCategory && matchesStatus
@@ -218,7 +219,7 @@ export default function ProductsTable({
                   </TableCell>
                   <TableCell>{product.brand?.name || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{product.category || 'N/A'}</Badge>
+                    <Badge variant="outline">{product.category?.name || 'N/A'}</Badge>
                   </TableCell>
                   <TableCell>
                     {product.variants && product.variants.length > 0
