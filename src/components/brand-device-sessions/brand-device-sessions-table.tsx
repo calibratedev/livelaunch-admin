@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { formatDate } from '@/lib/date'
 import { Search, Loader2 } from 'lucide-react'
 
 interface BrandDeviceSessionsTableProps {
@@ -50,11 +51,12 @@ export default function BrandDeviceSessionsTable({
             <TableHeader>
               <TableRow>
                 <TableHead>Device Info</TableHead>
-                <TableHead>App & Platform</TableHead>
+                <TableHead>App Version</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>IP Address</TableHead>
                 <TableHead>Timezone</TableHead>
                 <TableHead>Created Date</TableHead>
+                <TableHead>Updated At</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -65,18 +67,13 @@ export default function BrandDeviceSessionsTable({
                       <div className="font-medium text-sm">
                         {session.device_name || 'Unknown Device'}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {session.device_id?.substring(0, 16)}...
-                      </div>
+                      <div className="text-sm text-muted-foreground">{session.device_id}</div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium text-sm">
-                        {session.app_name || 'N/A'} v{session.app_version || 'N/A'}
-                      </div>
                       <div className="text-sm text-muted-foreground">
-                        {session.app_platform || 'Unknown'}
+                        {session.app_version || 'Unknown'}
                       </div>
                     </div>
                   </TableCell>
@@ -96,7 +93,8 @@ export default function BrandDeviceSessionsTable({
                   <TableCell>
                     <span className="text-sm">{session.timezone || 'N/A'}</span>
                   </TableCell>
-                  <TableCell>{new Date(session.created_at * 1000).toLocaleDateString()}</TableCell>
+                  <TableCell>{formatDate(session.created_at, 'MMM DD, YYYY HH:mm')}</TableCell>
+                  <TableCell>{formatDate(session.updated_at, 'MMM DD, YYYY HH:mm')}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

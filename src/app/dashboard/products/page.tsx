@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import DashboardLayout from '@/components/dashboard-layout'
 import { Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -58,51 +57,45 @@ export default function ProductsPage() {
 
   if (isLoading && isFirstLoad) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     )
   }
 
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-red-500">Error loading products: {error.message}</p>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-red-500">Error loading products: {error.message}</p>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Product Management</h1>
-            <p className="text-muted-foreground">
-              Manage and monitor all products across your platform
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Product Management</h1>
+          <p className="text-muted-foreground">
+            Manage and monitor all products across your platform
+          </p>
         </div>
-
-        {/* Table */}
-        <ProductsTable
-          products={products}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          selectedStatus={selectedStatus}
-          onStatusChange={setSelectedStatus}
-          onDeleteProduct={handleDeleteProduct}
-          isDeleting={deleteProductMutation.isPending}
-          isSearching={isSearching}
-        />
       </div>
-    </DashboardLayout>
+
+      {/* Table */}
+      <ProductsTable
+        products={products}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        onDeleteProduct={handleDeleteProduct}
+        isDeleting={deleteProductMutation.isPending}
+        isSearching={isSearching}
+      />
+    </div>
   )
 }

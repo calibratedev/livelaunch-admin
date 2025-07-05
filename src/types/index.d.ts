@@ -188,6 +188,46 @@ declare global {
       account_name: string
       platform: 'instagram' | 'tiktok'
     }
+
+    export interface AssetCoordinate {
+      file_key: string
+      x: number
+      y: number
+      width: number
+      height: number
+    }
+
+    export interface ScanDetail {
+      destination_path: string
+      file_name: string
+    }
+
+    export interface ScanRequest {
+      product_id: string
+      brand_device_session_id: string
+      input_file_key: string
+      frame_asset: AssetCoordinate
+      main_asset: AssetCoordinate
+      product_asset: AssetCoordinate
+    }
+
+    export interface ScanResponse {
+      job_id: string
+    }
+
+    export interface Scan {
+      id: string
+      created_at: string
+      updated_at: string
+      brand_device_session_id: string
+      brand_device_session?: BrandDeviceSession
+      product_id: string
+      product?: Product
+      job_id: string
+      status: string
+      detail: ScanDetail[]
+      input: ScanRequest
+    }
   }
 }
 

@@ -31,6 +31,8 @@ const endpoints = {
   getSocialAccounts: '/api/admin/social_accounts',
   createSocialAccount: 'POST /api/admin/social_accounts',
   removeSocialAccount: 'DELETE /api/admin/social_accounts/:platform',
+  paginateScans: '/api/admin/scans',
+  getScan: '/api/admin/scans/:scan_id',
 }
 
 export default endpoints

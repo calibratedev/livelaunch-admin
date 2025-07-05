@@ -5,25 +5,25 @@ import { Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/use-debounce'
-import BrandDeviceSessionsTable from '@/components/brand-device-sessions/brand-device-sessions-table'
+import ScansTable from '@/components/scans/scans-table'
 
-export default function BrandDeviceSessionsPage() {
+export default function ScansPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
   const {
-    data: brandDeviceSessions,
+    data: scans,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: api.paginateBrandDeviceSessions.getQueryKey({
+    queryKey: api.paginateScans.getQueryKey({
       keyword: debouncedSearchTerm,
       page: 1,
       limit: 10,
     }),
     queryFn: () =>
-      api.paginateBrandDeviceSessions<AppTypes.PaginatedResponse<AppTypes.BrandDeviceSession>>({
+      api.paginateScans<AppTypes.PaginatedResponse<AppTypes.Scan>>({
         keyword: debouncedSearchTerm,
         page: 1,
         limit: 10,
@@ -52,16 +52,16 @@ export default function BrandDeviceSessionsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Brand Device Sessions</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Scans</h1>
           <p className="text-muted-foreground">
-            Monitor and view all brand device sessions on your platform
+            Monitor and view all product scans on your platform
           </p>
         </div>
       </div>
 
       {/* Table */}
-      <BrandDeviceSessionsTable
-        brandDeviceSessions={brandDeviceSessions}
+      <ScansTable
+        scans={scans}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         isSearching={isSearching}

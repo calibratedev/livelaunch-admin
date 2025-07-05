@@ -26,6 +26,7 @@ import {
   Users,
   Monitor,
   Smartphone,
+  ScanLine,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getFullName, getInitials, toTitleCase } from '@/lib/text'
@@ -44,6 +45,7 @@ const navigation = [
   { name: 'Overview', href: '/dashboard', icon: BarChart3 },
   { name: 'Brand Management', href: '/dashboard/brands', icon: Building2 },
   { name: 'Products', href: '/dashboard/products', icon: Package },
+  { name: 'Scans', href: '/dashboard/scans', icon: ScanLine },
   {
     name: 'Device Sessions',
     href: '/dashboard/device-sessions',
