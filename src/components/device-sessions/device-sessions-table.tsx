@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -8,79 +10,162 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Search, Loader2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Search, Loader2, MoreHorizontal, Trash2 } from 'lucide-react'
+import { DeleteDeviceSessionDialog } from '@/components/device-sessions/delete-device-session-dialog'
+import { Pagination } from '@/components/ui/pagination'
+import { formatDate } from '@/lib/date'
 
 interface DeviceSessionsTableProps {
   deviceSessions?: AppTypes.PaginatedResponse<AppTypes.DeviceSession>
   searchTerm: string
   onSearchChange: (value: string) => void
+  onDeleteSession: (id: string) => void
   isSearching?: boolean
+  isDeleting?: boolean
+  currentPage: number
+  onPageChange: (page: number) => void
 }
 
 export default function DeviceSessionsTable({
   deviceSessions,
   searchTerm,
   onSearchChange,
+  onDeleteSession,
   isSearching,
+  isDeleting,
+  currentPage,
+  onPageChange,
 }: DeviceSessionsTableProps) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>All Device Sessions</CardTitle>
-        <CardDescription>A list of all device sessions on your platform</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center space-x-2 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search sessions..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-8"
-            />
-            {isSearching && (
-              <Loader2 className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
-            )}
-          </div>
-        </div>
+  const [deleteDialogState, setDeleteDialogState] = useState<{
+    open: boolean
+    deviceSession?: AppTypes.DeviceSession
+  }>({
+    open: false,
+    deviceSession: undefined,
+  })
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Device & Email</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>User Agent</TableHead>
-                <TableHead>Created Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {deviceSessions?.records?.map((session) => (
-                <TableRow key={session.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium text-sm">{session.device_id}.</div>
-                      <div className="text-sm text-muted-foreground">
-                        {session.email || 'No email'}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-sm">{session.ip_address || 'N/A'}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-[200px] truncate text-sm">
-                      {session.user_agent || 'N/A'}
-                    </div>
-                  </TableCell>
-                  <TableCell>{new Date(session.created_at * 1000).toLocaleDateString()}</TableCell>
+  const handleDeleteClick = (deviceSession: AppTypes.DeviceSession) => {
+    setDeleteDialogState({
+      open: true,
+      deviceSession,
+    })
+  }
+
+  const handleDeleteConfirm = () => {
+    if (deleteDialogState.deviceSession) {
+      onDeleteSession(deleteDialogState.deviceSession.id)
+      setDeleteDialogState({ open: false, deviceSession: undefined })
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogState({ open: false, deviceSession: undefined })
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>All Device Sessions</CardTitle>
+          <CardDescription>A list of all device sessions on your platform</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search sessions..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="pl-8"
+              />
+              {isSearching && (
+                <Loader2 className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Device & Email</TableHead>
+                  <TableHead>IP Address</TableHead>
+                  <TableHead>User Agent</TableHead>
+                  <TableHead>Created Date</TableHead>
+                  <TableHead>Last Update</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+              </TableHeader>
+              <TableBody>
+                {deviceSessions?.records?.map((session) => (
+                  <TableRow key={session.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium text-sm">{session.device_id}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {session.email || 'No email'}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono text-sm">{session.ip_address || 'N/A'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-[200px] truncate text-sm">
+                        {session.user_agent || 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell>{formatDate(session.created_at)}</TableCell>
+                    <TableCell>{formatDate(session.updated_at, 'MMM DD yyyy h:mm a')}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleDeleteClick(session)}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Session
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {deviceSessions && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={deviceSessions.total_page}
+              hasNext={deviceSessions.has_next}
+              hasPrev={deviceSessions.has_prev}
+              onPageChange={onPageChange}
+              className="mt-4"
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      <DeleteDeviceSessionDialog
+        open={deleteDialogState.open}
+        deviceSession={deleteDialogState.deviceSession}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        isDeleting={isDeleting || false}
+      />
+    </>
   )
 }

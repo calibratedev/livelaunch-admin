@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { MoreHorizontal, Edit, Trash2, Eye, Search, Loader2, Link, Check } from 'lucide-react'
 import { formatDate } from '@/lib/date'
 import { DeleteBrandDialog } from './delete-brand-dialog'
+import { Pagination } from '@/components/ui/pagination'
 import api from '@/lib/api'
 import { toast } from 'sonner'
 
@@ -32,6 +33,12 @@ interface BrandsTableProps {
   searchTerm: string
   setSearchTerm: (searchTerm: string) => void
   isSearching?: boolean
+  // Pagination props
+  currentPage: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+  onPageChange: (page: number) => void
 }
 
 export function BrandsTable({
@@ -42,6 +49,11 @@ export function BrandsTable({
   searchTerm,
   isSearching,
   setSearchTerm,
+  currentPage,
+  totalPages,
+  hasNext,
+  hasPrev,
+  onPageChange,
 }: BrandsTableProps) {
   const [deleteDialogState, setDeleteDialogState] = useState<{
     open: boolean
@@ -129,6 +141,7 @@ export function BrandsTable({
               <TableHead>Shopify Store</TableHead>
               <TableHead>Products Fetched</TableHead>
               <TableHead>Created Date</TableHead>
+              <TableHead>Last Update</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -153,6 +166,7 @@ export function BrandsTable({
                   </Badge>
                 </TableCell>
                 <TableCell>{formatDate(brand.created_at)}</TableCell>
+                <TableCell>{formatDate(brand.updated_at)}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -208,6 +222,18 @@ export function BrandsTable({
         </Table>
       </div>
 
+      {/* Pagination */}
+      <div className="mt-4">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          hasNext={hasNext}
+          hasPrev={hasPrev}
+          onPageChange={onPageChange}
+        />
+      </div>
+
+      {/* Delete Dialog */}
       <DeleteBrandDialog
         open={deleteDialogState.open}
         brand={deleteDialogState.brand}

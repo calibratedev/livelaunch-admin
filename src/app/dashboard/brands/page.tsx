@@ -14,6 +14,7 @@ export default function BrandsPage() {
   const queryClient = useQueryClient()
 
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
@@ -34,13 +35,13 @@ export default function BrandsPage() {
     error,
   } = useQuery({
     queryKey: api.paginateBrands.getQueryKey({
-      page: 1,
+      page: currentPage,
       limit: 10,
       keyword: debouncedSearchTerm,
     }),
     queryFn: () =>
       api.paginateBrands<AppTypes.PaginatedResponse<AppTypes.Brand>>({
-        page: 1,
+        page: currentPage,
         limit: 10,
         keyword: debouncedSearchTerm,
       }),
@@ -52,6 +53,11 @@ export default function BrandsPage() {
       setIsFirstLoad(false)
     }
   }, [isLoading, isFirstLoad])
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearchTerm])
 
   const isSearching = !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm
 
@@ -86,6 +92,10 @@ export default function BrandsPage() {
 
   const handleDialogClose = () => {
     setDialogState((prev) => ({ ...prev, open: false }))
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
   if (isLoading && isFirstLoad) {
@@ -133,6 +143,12 @@ export default function BrandsPage() {
             onDeleteBrand={handleDeleteBrand}
             isDeleting={deleteBrandMutation.isPending}
             isSearching={isSearching}
+            // Pagination props
+            currentPage={currentPage}
+            totalPages={brands?.total_page || 1}
+            hasNext={brands?.has_next || false}
+            hasPrev={brands?.has_prev || false}
+            onPageChange={handlePageChange}
           />
         </CardContent>
       </Card>

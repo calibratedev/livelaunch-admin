@@ -11,12 +11,19 @@ import {
 } from '@/components/ui/table'
 import { formatDate } from '@/lib/date'
 import { Search, Loader2 } from 'lucide-react'
+import { Pagination } from '@/components/ui/pagination'
 
 interface ScansTableProps {
   scans?: AppTypes.PaginatedResponse<AppTypes.Scan>
   searchTerm: string
   onSearchChange: (value: string) => void
   isSearching?: boolean
+  // Pagination props
+  currentPage: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+  onPageChange: (page: number) => void
 }
 
 export default function ScansTable({
@@ -24,6 +31,11 @@ export default function ScansTable({
   searchTerm,
   onSearchChange,
   isSearching,
+  currentPage,
+  totalPages,
+  hasNext,
+  hasPrev,
+  onPageChange,
 }: ScansTableProps) {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -145,6 +157,17 @@ export default function ScansTable({
               ))}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            hasNext={hasNext}
+            hasPrev={hasPrev}
+            onPageChange={onPageChange}
+          />
         </div>
       </CardContent>
     </Card>

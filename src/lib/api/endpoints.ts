@@ -23,10 +23,13 @@ const endpoints = {
   generateProductScanUrl: 'POST /api/admin/brand_products/:product_id/scan_url',
 
   getProduct: '/api/admin/brand_products/:product_id',
+
   paginateDeviceSessions: '/api/admin/device_sessions',
-  getDeviceSession: '/api/admin/device_sessions/:session_id',
+  deleteDeviceSession: 'DELETE /api/admin/device_sessions/:device_session_id',
+
   paginateBrandDeviceSessions: '/api/admin/brand_device_sessions',
   getBrandDeviceSession: '/api/admin/brand_device_sessions/:session_id',
+  deleteBrandDeviceSession: 'DELETE /api/admin/brand_device_sessions/:session_id',
 
   getSocialAccounts: '/api/admin/social_accounts',
   createSocialAccount: 'POST /api/admin/social_accounts',

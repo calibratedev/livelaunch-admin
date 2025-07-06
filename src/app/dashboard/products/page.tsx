@@ -9,6 +9,7 @@ import ProductsTable from '@/components/products/products-table'
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedStatus, setSelectedStatus] = useState('All')
@@ -23,11 +24,13 @@ export default function ProductsPage() {
   } = useQuery({
     queryKey: api.paginateProducts.getQueryKey({
       keyword: debouncedSearchTerm,
+      page: currentPage,
+      limit: 10,
     }),
     queryFn: () =>
       api.paginateProducts<AppTypes.PaginatedResponse<AppTypes.Product>>({
         keyword: debouncedSearchTerm,
-        page: 1,
+        page: currentPage,
         limit: 10,
       }),
     select: (data) => data?.data,
@@ -38,6 +41,11 @@ export default function ProductsPage() {
       setIsFirstLoad(false)
     }
   }, [isLoading, isFirstLoad])
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearchTerm])
 
   const isSearching = !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm
 
@@ -53,6 +61,10 @@ export default function ProductsPage() {
 
   const handleDeleteProduct = (id: string) => {
     deleteProductMutation.mutate(id)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
   if (isLoading && isFirstLoad) {
@@ -95,6 +107,12 @@ export default function ProductsPage() {
         onDeleteProduct={handleDeleteProduct}
         isDeleting={deleteProductMutation.isPending}
         isSearching={isSearching}
+        // Pagination props
+        currentPage={currentPage}
+        totalPages={products?.total_page || 1}
+        hasNext={products?.has_next || false}
+        hasPrev={products?.has_prev || false}
+        onPageChange={handlePageChange}
       />
     </div>
   )

@@ -2,15 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
-import api from '@/lib/api'
-import { useQuery } from '@tanstack/react-query'
+import api, { ApiResponse } from '@/lib/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/use-debounce'
 import DeviceSessionsTable from '@/components/device-sessions/device-sessions-table'
 
 export default function DeviceSessionsPage() {
+  const queryClient = useQueryClient()
   const [searchTerm, setSearchTerm] = useState('')
   const [isFirstLoad, setIsFirstLoad] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
+
+  const queryKey = api.paginateDeviceSessions.getQueryKey({
+    keyword: debouncedSearchTerm,
+    page: currentPage,
+    limit: 10,
+  })
 
   const {
     data: deviceSessions,
@@ -18,11 +26,7 @@ export default function DeviceSessionsPage() {
     isFetching,
     error,
   } = useQuery({
-    queryKey: api.paginateDeviceSessions.getQueryKey({
-      keyword: debouncedSearchTerm,
-      page: 1,
-      limit: 10,
-    }),
+    queryKey,
     queryFn: () =>
       api.paginateDeviceSessions<AppTypes.PaginatedResponse<AppTypes.DeviceSession>>({
         keyword: debouncedSearchTerm,
@@ -30,6 +34,33 @@ export default function DeviceSessionsPage() {
         limit: 10,
       }),
     select: (data) => data?.data,
+  })
+
+  const { mutate: deleteDeviceSession, isPending: isDeleting } = useMutation({
+    mutationFn: (deviceSessionId: string) =>
+      api.deleteDeviceSession<AppTypes.DeviceSession>({
+        device_session_id: deviceSessionId,
+      }),
+    onSuccess: (data, deviceSessionId) => {
+      queryClient.setQueryData(
+        queryKey,
+        (oldData: ApiResponse<AppTypes.PaginatedResponse<AppTypes.DeviceSession>>) => {
+          if (!oldData) {
+            queryClient.invalidateQueries({ queryKey })
+            return oldData
+          }
+          return {
+            ...(oldData || {}),
+            data: {
+              ...oldData.data,
+              records: oldData.data.records.filter((session) => session.id !== deviceSessionId),
+              total_page: Math.ceil((oldData.data.total_record - 1) / 10),
+              total_record: oldData.data.total_record - 1,
+            },
+          } satisfies ApiResponse<AppTypes.PaginatedResponse<AppTypes.DeviceSession>>
+        },
+      )
+    },
   })
 
   useEffect(() => {
@@ -74,6 +105,10 @@ export default function DeviceSessionsPage() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         isSearching={isSearching}
+        onDeleteSession={deleteDeviceSession}
+        isDeleting={isDeleting}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
       />
     </div>
   )

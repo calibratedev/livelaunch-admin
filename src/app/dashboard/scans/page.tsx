@@ -9,6 +9,7 @@ import ScansTable from '@/components/scans/scans-table'
 
 export default function ScansPage() {
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
@@ -19,13 +20,13 @@ export default function ScansPage() {
   } = useQuery({
     queryKey: api.paginateScans.getQueryKey({
       keyword: debouncedSearchTerm,
-      page: 1,
+      page: currentPage,
       limit: 10,
     }),
     queryFn: () =>
       api.paginateScans<AppTypes.PaginatedResponse<AppTypes.Scan>>({
         keyword: debouncedSearchTerm,
-        page: 1,
+        page: currentPage,
         limit: 10,
       }),
     select: (data) => data?.data,
@@ -37,7 +38,16 @@ export default function ScansPage() {
     }
   }, [isLoading, isFirstLoad])
 
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [debouncedSearchTerm])
+
   const isSearching = !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
 
   if (isLoading && isFirstLoad) {
     return (
@@ -65,6 +75,12 @@ export default function ScansPage() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         isSearching={isSearching}
+        // Pagination props
+        currentPage={currentPage}
+        totalPages={scans?.total_page || 1}
+        hasNext={scans?.has_next || false}
+        hasPrev={scans?.has_prev || false}
+        onPageChange={handlePageChange}
       />
     </div>
   )

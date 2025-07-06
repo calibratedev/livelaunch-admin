@@ -42,6 +42,7 @@ import { toTitleCase } from '@/lib/text'
 import { formatMoney } from '@/lib/money'
 import { useState } from 'react'
 import { ProductQRModal } from './product-qr-modal'
+import { Pagination } from '@/components/ui/pagination'
 
 interface ProductsTableProps {
   products?: AppTypes.PaginatedResponse<AppTypes.Product>
@@ -54,6 +55,12 @@ interface ProductsTableProps {
   onDeleteProduct: (id: string) => void
   isDeleting: boolean
   isSearching?: boolean
+  // Pagination props
+  currentPage: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+  onPageChange: (page: number) => void
 }
 
 export default function ProductsTable({
@@ -67,6 +74,11 @@ export default function ProductsTable({
   onDeleteProduct,
   isDeleting,
   isSearching,
+  currentPage,
+  totalPages,
+  hasNext,
+  hasPrev,
+  onPageChange,
 }: ProductsTableProps) {
   const [qrModalState, setQrModalState] = useState<{
     open: boolean
@@ -186,6 +198,7 @@ export default function ProductsTable({
                 <TableHead>Status</TableHead>
                 <TableHead>Handle</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Last Update</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -263,6 +276,7 @@ export default function ProductsTable({
                   </TableCell>
                   <TableCell>{product.handle || 'N/A'}</TableCell>
                   <TableCell>{product.product_type || 'N/A'}</TableCell>
+                  <TableCell>{formatDate(product.updated_at)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -319,6 +333,17 @@ export default function ProductsTable({
               ))}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            hasNext={hasNext}
+            hasPrev={hasPrev}
+            onPageChange={onPageChange}
+          />
         </div>
 
         {/* QR Modal */}
