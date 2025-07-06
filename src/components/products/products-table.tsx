@@ -3,13 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Table,
   TableBody,
   TableCell,
@@ -18,25 +11,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Search, MoreHorizontal, Edit, Trash2, Eye, Loader2, QrCode } from 'lucide-react'
+import { Search, MoreHorizontal, Eye, Loader2, QrCode } from 'lucide-react'
 import { formatDate } from '@/lib/date'
 import { toTitleCase } from '@/lib/text'
 import { formatMoney } from '@/lib/money'
@@ -48,14 +29,7 @@ interface ProductsTableProps {
   products?: AppTypes.PaginatedResponse<AppTypes.Product>
   searchTerm: string
   onSearchChange: (value: string) => void
-  selectedCategory: string
-  onCategoryChange: (value: string) => void
-  selectedStatus: string
-  onStatusChange: (value: string) => void
-  onDeleteProduct: (id: string) => void
-  isDeleting: boolean
   isSearching?: boolean
-  // Pagination props
   currentPage: number
   totalPages: number
   hasNext: boolean
@@ -67,12 +41,6 @@ export default function ProductsTable({
   products,
   searchTerm,
   onSearchChange,
-  selectedCategory,
-  onCategoryChange,
-  selectedStatus,
-  onStatusChange,
-  onDeleteProduct,
-  isDeleting,
   isSearching,
   currentPage,
   totalPages,
@@ -88,26 +56,13 @@ export default function ProductsTable({
     product: undefined,
   })
 
-  // Get unique categories and statuses from actual data
-  const uniqueCategories = [
-    'All',
-    ...new Set(products?.records?.map((p) => p.category?.name).filter(Boolean) || []),
-  ]
-  const uniqueStatuses = [
-    'All',
-    ...new Set(products?.records?.map((p) => p.status).filter(Boolean) || []),
-  ]
-
   const filteredProducts =
     products?.records?.filter((product) => {
       const matchesSearch =
         product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.brand?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesCategory =
-        selectedCategory === 'All' || product.category?.name === selectedCategory
-      const matchesStatus = selectedStatus === 'All' || product.status === selectedStatus
 
-      return matchesSearch && matchesCategory && matchesStatus
+      return matchesSearch
     }) || []
 
   const getStatusColor = (status: string) => {
@@ -159,30 +114,6 @@ export default function ProductsTable({
               <Loader2 className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
             )}
           </div>
-          <Select value={selectedCategory} onValueChange={onCategoryChange}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              {uniqueCategories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedStatus} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {uniqueStatuses.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="rounded-md border">
@@ -286,46 +217,10 @@ export default function ProductsTable({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Product
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleQRClick(product)}>
                           <QrCode className="mr-2 h-4 w-4" />
                           QR Code
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete Product
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the
-                                product and all associated data.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => onDeleteProduct(product.id)}
-                                disabled={isDeleting}
-                              >
-                                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import api from '@/lib/api'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/use-debounce'
 import ProductsTable from '@/components/products/products-table'
 
@@ -11,11 +11,8 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
-  const [selectedCategory, setSelectedCategory] = useState('All')
-  const [selectedStatus, setSelectedStatus] = useState('All')
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
-  const queryClient = useQueryClient()
   const {
     data: products,
     isLoading,
@@ -48,20 +45,6 @@ export default function ProductsPage() {
   }, [debouncedSearchTerm])
 
   const isSearching = !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm
-
-  // Mutations for product operations
-  const deleteProductMutation = useMutation({
-    mutationFn: (id: string) => api.deleteBrandProduct({ product_id: id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: api.paginateProducts.getQueryKey(),
-      })
-    },
-  })
-
-  const handleDeleteProduct = (id: string) => {
-    deleteProductMutation.mutate(id)
-  }
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -100,14 +83,7 @@ export default function ProductsPage() {
         products={products}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        selectedStatus={selectedStatus}
-        onStatusChange={setSelectedStatus}
-        onDeleteProduct={handleDeleteProduct}
-        isDeleting={deleteProductMutation.isPending}
         isSearching={isSearching}
-        // Pagination props
         currentPage={currentPage}
         totalPages={products?.total_page || 1}
         hasNext={products?.has_next || false}
