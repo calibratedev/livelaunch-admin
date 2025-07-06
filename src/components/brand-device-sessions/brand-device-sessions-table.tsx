@@ -139,7 +139,7 @@ export default function BrandDeviceSessionsTable({
                     <TableCell>
                       <span className="text-sm">{session.timezone || 'N/A'}</span>
                     </TableCell>
-                    <TableCell>{formatDate(session.created_at, 'MMM DD, YYYY HH:mm')}</TableCell>
+                    <TableCell>{formatDate(session.created_at, 'MMM DD, YYYY')}</TableCell>
                     <TableCell>{formatDate(session.updated_at, 'MMM DD, YYYY HH:mm')}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
