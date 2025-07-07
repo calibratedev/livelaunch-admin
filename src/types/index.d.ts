@@ -220,6 +220,8 @@ declare global {
       job_id: string
     }
 
+    export type ScanStatus = 'processing' | 'completed' | 'failed'
+
     export interface Scan {
       id: string
       created_at: string
@@ -229,9 +231,12 @@ declare global {
       product_id: string
       product?: Product
       job_id: string
-      status: string
+      status: ScanStatus
       detail: ScanDetail[]
       input: ScanRequest
+      is_story: boolean
+      asset_attachment: Attachment
+      thumbnail_attachment: Attachment
     }
   }
 }
