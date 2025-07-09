@@ -42,6 +42,7 @@ interface ScansTableProps {
   hasNext: boolean
   hasPrev: boolean
   onPageChange: (page: number) => void
+  onSyncStatus: (scan: AppTypes.Scan) => void
 }
 
 export default function ScansTable({
@@ -54,6 +55,7 @@ export default function ScansTable({
   hasNext,
   hasPrev,
   onPageChange,
+  onSyncStatus,
 }: ScansTableProps) {
   const [rawDataModal, setRawDataModal] = useState<{
     open: boolean
@@ -116,14 +118,6 @@ export default function ScansTable({
       toast.success('Share link copied to clipboard!')
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to copy share link')
-    }
-  }
-
-  const handleSyncStatus = async (scan: AppTypes.Scan) => {
-    try {
-      console.log(scan)
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to sync status')
     }
   }
 
@@ -300,7 +294,7 @@ export default function ScansTable({
                               <Share2 className="mr-2 h-4 w-4" />
                               Get Share Link
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleSyncStatus(scan)}>
+                            <DropdownMenuItem onClick={() => onSyncStatus(scan)}>
                               <RefreshCw className="mr-2 h-4 w-4" />
                               Sync Status
                             </DropdownMenuItem>

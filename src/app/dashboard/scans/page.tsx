@@ -3,26 +3,74 @@
 import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import api from '@/lib/api'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/use-debounce'
 import ScansTable from '@/components/scans/scans-table'
+import Api from '@/lib/api'
+import { toast } from 'sonner'
 
 export default function ScansPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const queryKey = api.paginateScans.getQueryKey({
+    keyword: debouncedSearchTerm,
+    page: currentPage,
+    limit: 10,
+  })
+  const { mutate: syncScan } = useMutation({
+    mutationFn: (scan: AppTypes.Scan) => {
+      return Api.syncScan<AppTypes.Scan>({
+        scan_id: scan.id,
+      })
+    },
+    onSuccess: (data, variables) => {
+      toast.success('Scan status synced successfully')
+      queryClient.setQueriesData(
+        {
+          queryKey: ['scans'],
+          pageParam: currentPage,
+        },
+        (oldData) => {
+          if (!oldData) {
+            return oldData
+          }
 
+          queryClient.setQueryData(
+            queryKey,
+            (oldData: AppTypes.PaginatedResponse<AppTypes.Scan>) => {
+              return {
+                ...oldData,
+                records: oldData.records.map((record) => {
+                  if (record.id === variables.id) {
+                    return {
+                      ...record,
+                      status: data.data.status,
+                      asset_attachment: data.data.asset_attachment,
+                      thumbnail_attachment: data.data.thumbnail_attachment,
+                    }
+                  }
+                  return record
+                }),
+              }
+            },
+          )
+        },
+      )
+    },
+    onError: () => {
+      toast.error('Failed to sync scan status')
+    },
+  })
+
+  const queryClient = useQueryClient()
   const {
     data: scans,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: api.paginateScans.getQueryKey({
-      keyword: debouncedSearchTerm,
-      page: currentPage,
-      limit: 10,
-    }),
+    queryKey,
     queryFn: () =>
       api.paginateScans<AppTypes.PaginatedResponse<AppTypes.Scan>>({
         keyword: debouncedSearchTerm,
@@ -75,12 +123,12 @@ export default function ScansPage() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         isSearching={isSearching}
-        // Pagination props
         currentPage={currentPage}
         totalPages={scans?.total_page || 1}
         hasNext={scans?.has_next || false}
         hasPrev={scans?.has_prev || false}
         onPageChange={handlePageChange}
+        onSyncStatus={syncScan}
       />
     </div>
   )
