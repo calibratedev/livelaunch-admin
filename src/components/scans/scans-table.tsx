@@ -128,6 +128,13 @@ export default function ScansTable({
     })
   }
 
+  // Add this helper function after the existing utility functions
+  const isVideoFile = (url: string): boolean => {
+    const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.ogg', '.3gp']
+    const extension = url.toLowerCase().split('.').pop()
+    return videoExtensions.includes(`.${extension}`)
+  }
+
   return (
     <>
       <Card>
@@ -210,19 +217,31 @@ export default function ScansTable({
                                 onClick={() => window.open(imageUrls.asset!, '_blank')}
                                 title="Click to view asset"
                               >
-                                <Image
-                                  src={imageUrls.asset}
-                                  alt="Asset preview"
-                                  fill
-                                  className="object-cover"
-                                  sizes="64px"
-                                />
+                                {isVideoFile(imageUrls.asset) ? (
+                                  <video
+                                    src={imageUrls.asset}
+                                    className="w-full h-full object-cover"
+                                    muted
+                                    loop
+                                    playsInline
+                                    onMouseEnter={(e) => e.currentTarget.play()}
+                                    onMouseLeave={(e) => e.currentTarget.pause()}
+                                  />
+                                ) : (
+                                  <Image
+                                    src={imageUrls.asset}
+                                    alt="Asset preview"
+                                    fill
+                                    className="object-cover"
+                                    sizes="64px"
+                                  />
+                                )}
                                 <div className="absolute top-1 right-1 bg-black/50 rounded-full p-1">
                                   <ExternalLink className="h-3 w-3 text-white" />
                                 </div>
                               </div>
                               <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[10px] px-1 py-0.5">
-                                Video
+                                {isVideoFile(imageUrls.asset) ? 'Video' : 'Image'}
                               </div>
                             </div>
                           )}
