@@ -29,10 +29,11 @@ export default function ScansPage() {
       toast.success('Scan status synced successfully')
       queryClient.setQueriesData(
         {
-          queryKey: ['scans'],
+          queryKey: queryKey,
           pageParam: currentPage,
         },
         (oldData) => {
+          console.log('*** syncScan oldData', oldData)
           if (!oldData) {
             return oldData
           }
