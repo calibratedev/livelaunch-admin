@@ -9,8 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
-import { Shield, Settings, Eye, EyeOff, Check, X } from 'lucide-react'
+import { Shield, Eye, EyeOff, Check, X } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import Api from '@/lib/api'
 import { toast } from 'sonner'
@@ -210,29 +209,6 @@ export default function SecurityTab() {
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Two-Factor Authentication</CardTitle>
-          <CardDescription>Add an extra layer of security to your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Authenticator App</p>
-              <p className="text-sm text-muted-foreground">
-                Use an authenticator app to generate verification codes
-              </p>
-            </div>
-            <Badge variant="outline">Not Enabled</Badge>
-          </div>
-          <Separator className="my-4" />
-          <Button variant="outline">
-            <Settings className="mr-2 h-4 w-4" />
-            Configure 2FA
-          </Button>
         </CardContent>
       </Card>
     </div>

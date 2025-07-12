@@ -37,6 +37,11 @@ const endpoints = {
   paginateScans: '/api/admin/scans',
   getScan: '/api/admin/scans/:scan_id',
   syncScan: 'POST /api/admin/scans/:scan_id/sync',
+
+  getDeviceStats: 'GET /api/admin/stats/devices',
+  getSessionStats: 'GET /api/admin/stats/sessions',
+  getProductStats: 'GET /api/admin/stats/products',
+  getBrandStats: 'GET /api/admin/stats/brands',
 }
 
 export default endpoints

@@ -1,6 +1,6 @@
 'use client'
 
-import { User, Bell, Shield, Database, Instagram } from 'lucide-react'
+import { User, Shield, Instagram } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -15,16 +15,6 @@ const settingsNavigation = [
     name: 'Security',
     href: '/dashboard/settings/security',
     icon: Shield,
-  },
-  {
-    name: 'Notifications',
-    href: '/dashboard/settings/notifications',
-    icon: Bell,
-  },
-  {
-    name: 'System',
-    href: '/dashboard/settings/system',
-    icon: Database,
   },
   {
     name: 'Social Accounts',
@@ -45,7 +35,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       </div>
 
       {/* Navigation */}
-      <div className="flex space-x-1 bg-muted p-1 rounded-lg">
+      <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
         {settingsNavigation.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href

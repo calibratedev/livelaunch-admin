@@ -17,116 +17,142 @@ import {
   Building2,
   Package,
   TrendingUp,
+  TrendingDown,
   DollarSign,
-  ShoppingCart,
-  Activity,
-  Calendar,
+  Loader2,
 } from 'lucide-react'
-import { getFullName } from '@/lib/text'
+import { getFullName, toTitleCase } from '@/lib/text'
+import { formatDate } from '@/lib/date'
+import { formatMoney } from '@/lib/money'
+import api from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
 
-const statsCards = [
-  {
-    title: 'Total Users',
-    value: '2,543',
-    change: '+12%',
-    changeType: 'positive' as const,
-    icon: Users,
-  },
-  {
-    title: 'Active Brands',
-    value: '156',
-    change: '+8%',
-    changeType: 'positive' as const,
-    icon: Building2,
-  },
-  {
-    title: 'Total Products',
-    value: '1,249',
-    change: '+23%',
-    changeType: 'positive' as const,
-    icon: Package,
-  },
-  {
-    title: 'Revenue',
-    value: '$45,239',
-    change: '+15%',
-    changeType: 'positive' as const,
-    icon: DollarSign,
-  },
-]
-
-const recentBrands = [
-  {
-    id: 1,
-    name: 'TechFlow Inc',
-    status: 'active',
-    products: 23,
-    joinedDate: '2024-01-15',
-    revenue: '$12,450',
-  },
-  {
-    id: 2,
-    name: 'Creative Studio',
-    status: 'pending',
-    products: 8,
-    joinedDate: '2024-01-20',
-    revenue: '$3,200',
-  },
-  {
-    id: 3,
-    name: 'Fashion Forward',
-    status: 'active',
-    products: 45,
-    joinedDate: '2024-01-10',
-    revenue: '$8,900',
-  },
-  {
-    id: 4,
-    name: 'Food & Co',
-    status: 'active',
-    products: 12,
-    joinedDate: '2024-01-25',
-    revenue: '$5,600',
-  },
-]
-
-const recentProducts = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    brand: 'TechFlow Inc',
-    category: 'Electronics',
-    price: '$99.99',
-    status: 'active',
-  },
-  {
-    id: 2,
-    name: 'Coffee Mug',
-    brand: 'Creative Studio',
-    category: 'Lifestyle',
-    price: '$19.99',
-    status: 'draft',
-  },
-  {
-    id: 3,
-    name: 'Running Shoes',
-    brand: 'Fashion Forward',
-    category: 'Fashion',
-    price: '$129.99',
-    status: 'active',
-  },
-  {
-    id: 4,
-    name: 'Organic Coffee Beans',
-    brand: 'Food & Co',
-    category: 'Food',
-    price: '$24.99',
-    status: 'active',
-  },
-]
+// Define stat interfaces based on what we expect from the API
+interface StatResponse {
+  total: number
+  growth?: number
+  growth_type?: 'stable' | 'decrease' | 'increase'
+}
 
 export default function DashboardPage() {
   const { user } = useAuth()
+
+  // Stats API calls
+  const {
+    data: deviceStats,
+    isLoading: isLoadingDeviceStats,
+    error: deviceStatsError,
+  } = useQuery({
+    queryKey: api.getDeviceStats.getQueryKey(),
+    queryFn: () => api.getDeviceStats<StatResponse>(),
+    select: (data) => data?.data,
+  })
+
+  const {
+    data: sessionStats,
+    isLoading: isLoadingSessionStats,
+    error: sessionStatsError,
+  } = useQuery({
+    queryKey: api.getSessionStats.getQueryKey(),
+    queryFn: () => api.getSessionStats<StatResponse>(),
+    select: (data) => data?.data,
+  })
+
+  const {
+    data: productStats,
+    isLoading: isLoadingProductStats,
+    error: productStatsError,
+  } = useQuery({
+    queryKey: api.getProductStats.getQueryKey(),
+    queryFn: () => api.getProductStats<StatResponse>(),
+    select: (data) => data?.data,
+  })
+
+  const {
+    data: brandStats,
+    isLoading: isLoadingBrandStats,
+    error: brandStatsError,
+  } = useQuery({
+    queryKey: api.getBrandStats.getQueryKey(),
+    queryFn: () => api.getBrandStats<StatResponse>(),
+    select: (data) => data?.data,
+  })
+
+  // Recent brands API call (get first 10 newest records)
+  const {
+    data: recentBrands,
+    isLoading: isLoadingBrands,
+    error: brandsError,
+  } = useQuery({
+    queryKey: api.paginateBrands.getQueryKey({
+      page: 1,
+      limit: 10,
+      keyword: '',
+    }),
+    queryFn: () =>
+      api.paginateBrands<AppTypes.PaginatedResponse<AppTypes.Brand>>({
+        page: 1,
+        limit: 10,
+        keyword: '',
+      }),
+    select: (data) => data?.data,
+  })
+
+  // Recent products API call (get first 10 newest records)
+  const {
+    data: recentProducts,
+    isLoading: isLoadingProducts,
+    error: productsError,
+  } = useQuery({
+    queryKey: api.paginateProducts.getQueryKey({
+      page: 1,
+      limit: 10,
+      keyword: '',
+    }),
+    queryFn: () =>
+      api.paginateProducts<AppTypes.PaginatedResponse<AppTypes.Product>>({
+        page: 1,
+        limit: 10,
+        keyword: '',
+      }),
+    select: (data) => data?.data,
+  })
+
+  // Build stats cards from API data
+  const statsCards = [
+    {
+      title: 'Total Devices',
+      value: isLoadingDeviceStats ? '...' : deviceStats?.total?.toLocaleString() || '0',
+      change: deviceStats?.growth ? `${deviceStats?.growth}%` : 'No change',
+      changeType: deviceStats?.growth_type || 'stable',
+      icon: Users,
+      error: deviceStatsError,
+    },
+    {
+      title: 'Active Brands',
+      value: isLoadingBrandStats ? '...' : brandStats?.total?.toLocaleString() || '0',
+      change: brandStats?.growth ? `${brandStats?.growth}%` : 'No change',
+      changeType: brandStats?.growth_type || 'stable',
+      icon: Building2,
+      error: brandStatsError,
+    },
+    {
+      title: 'Total Products',
+      value: isLoadingProductStats ? '...' : productStats?.total?.toLocaleString() || '0',
+      change: productStats?.growth ? `${productStats?.growth}%` : 'No change',
+      changeType: productStats?.growth_type || 'stable',
+      icon: Package,
+      error: productStatsError,
+    },
+    {
+      title: 'Total Sessions',
+      value: isLoadingSessionStats ? '...' : sessionStats?.total?.toLocaleString() || '0',
+      change: sessionStats?.growth ? `${sessionStats?.growth}%` : 'No change',
+      changeType: sessionStats?.growth_type || 'stable',
+      icon: DollarSign,
+      error: sessionStatsError,
+    },
+  ]
 
   return (
     <div className="space-y-6">
@@ -134,8 +160,8 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
         <p className="text-muted-foreground">
-          Welcome back{getFullName(user) || ''}! Here&apos;s what&apos;s happening with your
-          platform.
+          Welcome back{getFullName(user) ? `, ${getFullName(user)}` : ''}! Here&apos;s what&apos;s
+          happening with your platform.
         </p>
       </div>
 
@@ -148,179 +174,153 @@ export default function DashboardPage() {
               <card.icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-              <p className="text-xs text-muted-foreground">
-                <span
-                  className={`inline-flex items-center ${
-                    card.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  <TrendingUp className="mr-1 h-3 w-3" />
-                  {card.change}
-                </span>{' '}
-                from last month
-              </p>
+              <div className="text-2xl font-bold">
+                {card.error ? <span className="text-red-500 text-sm">Error</span> : card.value}
+              </div>
+              {!card.error && (
+                <p className="text-xs text-muted-foreground">
+                  <span
+                    className={`inline-flex items-center ${
+                      card.changeType === 'increase'
+                        ? 'text-green-600'
+                        : card.changeType === 'decrease'
+                        ? 'text-red-600'
+                        : 'text-gray-600'
+                    }`}
+                  >
+                    {card.changeType === 'increase' ? (
+                      <TrendingUp className="mr-1 h-3 w-3" />
+                    ) : card.changeType === 'decrease' ? (
+                      <TrendingDown className="mr-1 h-3 w-3" />
+                    ) : null}
+                    {card.change}
+                  </span>{' '}
+                  from last month
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest updates from your platform</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    New brand &ldquo;TechFlow Inc&rdquo; registered
-                  </p>
-                  <p className="text-sm text-muted-foreground">2 hours ago</p>
-                </div>
-                <div className="ml-auto font-medium">
-                  <Badge variant="secondary">New</Badge>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Product &ldquo;Wireless Headphones&rdquo; approved
-                  </p>
-                  <p className="text-sm text-muted-foreground">4 hours ago</p>
-                </div>
-                <div className="ml-auto font-medium">
-                  <Badge>Approved</Badge>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="ml-4 space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    Monthly revenue report generated
-                  </p>
-                  <p className="text-sm text-muted-foreground">1 day ago</p>
-                </div>
-                <div className="ml-auto font-medium">
-                  <Badge variant="outline">Report</Badge>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Quick Stats</CardTitle>
-            <CardDescription>This month&apos;s performance metrics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Activity className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm">Active Sessions</span>
-                </div>
-                <span className="font-medium">1,234</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <ShoppingCart className="h-4 w-4 text-green-600" />
-                  <span className="text-sm">Orders Today</span>
-                </div>
-                <span className="font-medium">89</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm">Pending Reviews</span>
-                </div>
-                <span className="font-medium">12</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Data Tables */}
+      {/* Tables */}
       <Tabs defaultValue="brands" className="space-y-4">
         <TabsList>
           <TabsTrigger value="brands">Recent Brands</TabsTrigger>
           <TabsTrigger value="products">Recent Products</TabsTrigger>
         </TabsList>
-
         <TabsContent value="brands" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Recent Brands</CardTitle>
-              <CardDescription>Latest brands that joined your platform</CardDescription>
+              <CardDescription>Latest brand registrations and updates</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Products</TableHead>
-                    <TableHead>Joined Date</TableHead>
-                    <TableHead>Revenue</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentBrands.map((brand) => (
-                    <TableRow key={brand.id}>
-                      <TableCell className="font-medium">{brand.name}</TableCell>
-                      <TableCell>
-                        <Badge variant={brand.status === 'active' ? 'default' : 'secondary'}>
-                          {brand.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{brand.products}</TableCell>
-                      <TableCell>{brand.joinedDate}</TableCell>
-                      <TableCell>{brand.revenue}</TableCell>
+              {isLoadingBrands ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : brandsError ? (
+                <div className="flex items-center justify-center h-32">
+                  <p className="text-red-500">Error loading brands</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Brand Name</TableHead>
+                      <TableHead>Domain</TableHead>
+                      <TableHead>Shopify Store</TableHead>
+                      <TableHead>Products Fetched</TableHead>
+                      <TableHead>Created Date</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {recentBrands?.records?.map((brand) => (
+                      <TableRow key={brand.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{brand.name}</div>
+                            <div className="text-sm text-muted-foreground">{brand.email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{brand.domain || brand.shopify_domain || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant={brand.shopify_id ? 'default' : 'secondary'}>
+                            {brand.shopify_id ? 'Connected' : 'Not connected'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={brand.has_fetched_products ? 'default' : 'secondary'}>
+                            {brand.has_fetched_products ? 'Yes' : 'No'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatDate(brand.created_at)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
-
         <TabsContent value="products" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Recent Products</CardTitle>
-              <CardDescription>Latest products added to the platform</CardDescription>
+              <CardDescription>Latest product submissions and updates</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Brand</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.brand}</TableCell>
-                      <TableCell>{product.category}</TableCell>
-                      <TableCell>{product.price}</TableCell>
-                      <TableCell>
-                        <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                          {product.status}
-                        </Badge>
-                      </TableCell>
+              {isLoadingProducts ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : productsError ? (
+                <div className="flex items-center justify-center h-32">
+                  <p className="text-red-500">Error loading products</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product Name</TableHead>
+                      <TableHead>Brand</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {recentProducts?.records?.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">{product.title}</TableCell>
+                        <TableCell>{product.brand?.name || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{product.category?.name || 'N/A'}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {product.variants && product.variants.length > 0
+                            ? formatMoney(parseFloat(product.variants[0].price) || 0)
+                            : formatMoney(product.price || 0)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              product.status === 'active'
+                                ? 'default'
+                                : product.status === 'draft'
+                                ? 'secondary'
+                                : 'outline'
+                            }
+                          >
+                            {toTitleCase(product.status)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
