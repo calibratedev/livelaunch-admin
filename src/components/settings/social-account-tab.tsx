@@ -1,52 +1,17 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { CheckCircle, Loader2, XCircle } from 'lucide-react'
 import TiktokIcon from '../../../public/tiktok.svg'
 import InstagramIcon from '../../../public/instagram.svg'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+
 import { toast } from 'sonner'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { env } from '@/env'
 
-type FormData = {
-  account_id: string
-  account_name: string
-  access_token: string
-}
 export default function SocialAccountTab() {
-  const [showInstagramDialog, setShowInstagramDialog] = useState(false)
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({
-    resolver: zodResolver(
-      z.object({
-        account_id: z.string().min(1, 'Account ID is required'),
-        account_name: z.string().min(1, 'Account Name is required'),
-        access_token: z.string().min(1, 'Access Token is required'),
-      }),
-    ),
-    defaultValues: {
-      account_id: '',
-      account_name: '',
-      access_token: '',
-    },
-  })
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['social-accounts'],
     queryFn: async (): Promise<AppTypes.SocialAccount[]> => {
@@ -55,28 +20,13 @@ export default function SocialAccountTab() {
       return resp.data.records
     },
   })
-  const { mutate: connectInstagram, isPending: isConnecting } = useMutation({
-    mutationFn: async (data: FormData) => {
-      return await api.createSocialAccount({ ...data, platform: 'instagram' })
-    },
-    onSuccess: () => {
-      toast.success('Instagram account connected successfully')
-      setShowInstagramDialog(false)
-      reset()
-      refetch()
-    },
-    onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to connect Instagram account')
-    },
-  })
+
   const { mutate: disconnectPlatform, isPending: isDisconnecting } = useMutation({
     mutationFn: async (platform: string) => {
       return await api.removeSocialAccount({ platform })
     },
     onSuccess: (_, platform) => {
       toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} account is removed`)
-      setShowInstagramDialog(false)
-      reset()
       refetch()
     },
     onError: (error: unknown, platform: string) => {
@@ -93,15 +43,6 @@ export default function SocialAccountTab() {
       connectedAccount: account?.account_name || null,
     }
   })
-
-  // Handle Instagram connect
-  const onSubmit = (formData: FormData) => {
-    connectInstagram(formData)
-  }
-  const handleCloseDialog = (value: boolean) => {
-    setShowInstagramDialog(value)
-    reset()
-  }
 
   return (
     <div className="space-y-4">
@@ -149,17 +90,9 @@ export default function SocialAccountTab() {
                   >
                     Disconnect
                   </Button>
-                ) : account.platform === 'instagram' ? (
-                  <Button
-                    size="sm"
-                    onClick={() => setShowInstagramDialog(true)}
-                    disabled={isConnecting}
-                  >
-                    Connect
-                  </Button>
                 ) : (
                   <Button size="sm" asChild>
-                    <a href={`${env.NEXT_PUBLIC_API_URL}/api/oauth/tiktok`}>Connect</a>
+                    <a href={`${env.NEXT_PUBLIC_API_URL}/api/oauth/${account.platform}`}>Connect</a>
                   </Button>
                 )}
               </div>
@@ -167,52 +100,6 @@ export default function SocialAccountTab() {
           ))}
         </div>
       )}
-
-      {/* Instagram Connect Dialog */}
-      <Dialog open={showInstagramDialog} onOpenChange={handleCloseDialog}>
-        <DialogContent>
-          <form className="space-y-2" onSubmit={handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Connect Instagram Account</DialogTitle>
-            </DialogHeader>
-            <div>
-              <Input
-                placeholder="Account ID"
-                {...register('account_id')}
-                className={errors.account_id ? 'border-red-500 focus-visible:ring-red-500' : ''}
-              />
-              {errors.account_id && (
-                <p className="mt-1 text-xs text-red-500">{errors.account_id.message}</p>
-              )}
-            </div>
-            <div>
-              <Input
-                placeholder="Account Name"
-                {...register('account_name')}
-                className={errors.account_name ? 'border-red-500 focus-visible:ring-red-500' : ''}
-              />
-              {errors.account_name && (
-                <p className="mt-1 text-xs text-red-500">{errors.account_name.message}</p>
-              )}
-            </div>
-            <div>
-              <Input
-                placeholder="Access Token"
-                {...register('access_token')}
-                className={errors.access_token ? 'border-red-500 focus-visible:ring-red-500' : ''}
-              />
-              {errors.access_token && (
-                <p className="mt-1 text-xs text-red-500">{errors.access_token.message}</p>
-              )}
-            </div>
-            <DialogFooter>
-              <Button type="submit" disabled={isConnecting}>
-                Submit
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
