@@ -46,7 +46,7 @@ export default function SocialAccountTab() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Social Accounts</h2>
+      <h2 className="text-lg font-semibold">Social Account</h2>
       <p className="text-sm text-muted-foreground">Connect your social media accounts</p>
       {isPending ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
