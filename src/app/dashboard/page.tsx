@@ -123,7 +123,7 @@ export default function DashboardPage() {
     {
       title: 'Total Devices',
       value: isLoadingDeviceStats ? '...' : deviceStats?.total?.toLocaleString() || '0',
-      change: deviceStats?.growth ? `${deviceStats?.growth}%` : 'No change',
+      change: deviceStats?.growth ? `${deviceStats?.growth.toFixed(2)}%` : 'No change',
       changeType: deviceStats?.growth_type || 'stable',
       icon: Users,
       error: deviceStatsError,
@@ -131,7 +131,7 @@ export default function DashboardPage() {
     {
       title: 'Active Brands',
       value: isLoadingBrandStats ? '...' : brandStats?.total?.toLocaleString() || '0',
-      change: brandStats?.growth ? `${brandStats?.growth}%` : 'No change',
+      change: brandStats?.growth ? `${brandStats?.growth.toFixed(2)}%` : 'No change',
       changeType: brandStats?.growth_type || 'stable',
       icon: Building2,
       error: brandStatsError,
@@ -139,7 +139,7 @@ export default function DashboardPage() {
     {
       title: 'Total Products',
       value: isLoadingProductStats ? '...' : productStats?.total?.toLocaleString() || '0',
-      change: productStats?.growth ? `${productStats?.growth}%` : 'No change',
+      change: productStats?.growth ? `${productStats?.growth.toFixed(2)}%` : 'No change',
       changeType: productStats?.growth_type || 'stable',
       icon: Package,
       error: productStatsError,
@@ -147,7 +147,7 @@ export default function DashboardPage() {
     {
       title: 'Total Sessions',
       value: isLoadingSessionStats ? '...' : sessionStats?.total?.toLocaleString() || '0',
-      change: sessionStats?.growth ? `${sessionStats?.growth}%` : 'No change',
+      change: sessionStats?.growth ? `${sessionStats?.growth.toFixed(2)}%` : 'No change',
       changeType: sessionStats?.growth_type || 'stable',
       icon: DollarSign,
       error: sessionStatsError,

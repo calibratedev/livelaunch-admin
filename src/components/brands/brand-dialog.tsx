@@ -30,6 +30,45 @@ const brandSchema = z.object({
     .min(1, 'Shopify shop name is required')
     .min(3, 'Shop name must be at least 3 characters')
     .regex(/^[a-zA-Z0-9-]+$/, 'Shop name must contain only letters, numbers, and hyphens'),
+  ig_handle: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val.trim() === '') return true // Allow empty
+
+        // Remove @ symbol if present
+        const cleanHandle = val.replace(/^@/, '')
+
+        if (cleanHandle.length > 30) {
+          return false
+        }
+
+        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(cleanHandle)) {
+          return false
+        }
+
+        return true
+      },
+      (val) => {
+        if (!val || val.trim() === '') return { message: '' }
+
+        const cleanHandle = val.replace(/^@/, '')
+
+        if (cleanHandle.length > 30) {
+          return { message: 'Instagram username must be 30 characters or less' }
+        }
+
+        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(cleanHandle)) {
+          return {
+            message:
+              'Instagram username can only contain letters, numbers, underscores, and periods. Cannot start or end with a period or have consecutive periods.',
+          }
+        }
+
+        return { message: '' }
+      },
+    ),
   primary_color: z
     .string()
     .regex(/^#[0-9A-F]{6}$/i, 'Please enter a valid hex color (e.g., #FF5733)'),
@@ -67,6 +106,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
       name: '',
       email: '',
       shopify_shop_name: '',
+      ig_handle: '',
       primary_color: '#000000',
       get_started_image_attachment: null,
       logo_image_attachment: null,
@@ -86,6 +126,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
         name: brand.name || '',
         email: brand.email || '',
         shopify_shop_name: shopifyShopName,
+        ig_handle: brand.ig_handle || '',
         primary_color: brand.primary_color || '#000000',
         get_started_image_attachment: brand.get_started_image_attachment,
         logo_image_attachment: brand.logo_image_attachment,
@@ -97,6 +138,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
         name: '',
         email: '',
         shopify_shop_name: '',
+        ig_handle: '',
         primary_color: '#000000',
         get_started_image_attachment: null,
         logo_image_attachment: null,
@@ -278,6 +320,22 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
                   </p>
                   {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ig_handle">Instagram Handle</Label>
+                <Input
+                  id="ig_handle"
+                  {...register('ig_handle')}
+                  placeholder="@username or username"
+                  className={errors.ig_handle ? 'border-red-500' : ''}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optional. Enter Instagram username (with or without @)
+                </p>
+                {errors.ig_handle && (
+                  <p className="text-sm text-red-500">{errors.ig_handle.message}</p>
+                )}
               </div>
             </div>
 

@@ -96,6 +96,8 @@ declare global {
       logo_image_attachment: Attachment
       background_image_attachment: Attachment
       frame_image_attachment: Attachment
+
+      ig_handle: string
     }
 
     export interface ProductCategory {
