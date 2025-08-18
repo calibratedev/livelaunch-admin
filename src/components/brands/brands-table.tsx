@@ -138,6 +138,7 @@ export function BrandsTable({
             <TableRow>
               <TableHead>Brand</TableHead>
               <TableHead>Domain</TableHead>
+              <TableHead>Instagram Handles</TableHead>
               <TableHead>Shopify Store</TableHead>
               <TableHead>Products Fetched</TableHead>
               <TableHead>Created Date</TableHead>
@@ -155,6 +156,19 @@ export function BrandsTable({
                   </div>
                 </TableCell>
                 <TableCell>{brand.domain || brand.shopify_domain || 'N/A'}</TableCell>
+                <TableCell>
+                  {brand.instagram_handles && brand.instagram_handles.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {brand.instagram_handles.map((handle, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          @{handle}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No handles</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <Badge variant={brand.shopify_id ? 'default' : 'secondary'}>
                     {brand.shopify_id ? 'Connected' : 'Not connected'}

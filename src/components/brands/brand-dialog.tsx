@@ -37,14 +37,16 @@ const brandSchema = z.object({
       (val) => {
         if (!val || val.trim() === '') return true // Allow empty
 
-        // Remove @ symbol if present
-        const cleanHandle = val.replace(/^@/, '')
-
-        if (cleanHandle.length > 30) {
+        // Reject if starts with @
+        if (val.startsWith('@')) {
           return false
         }
 
-        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(cleanHandle)) {
+        if (val.length > 30) {
+          return false
+        }
+
+        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(val)) {
           return false
         }
 
@@ -53,13 +55,16 @@ const brandSchema = z.object({
       (val) => {
         if (!val || val.trim() === '') return { message: '' }
 
-        const cleanHandle = val.replace(/^@/, '')
+        // Check for @ symbol first
+        if (val.startsWith('@')) {
+          return { message: 'Instagram username should not start with @. Enter the username only.' }
+        }
 
-        if (cleanHandle.length > 30) {
+        if (val.length > 30) {
           return { message: 'Instagram username must be 30 characters or less' }
         }
 
-        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(cleanHandle)) {
+        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(val)) {
           return {
             message:
               'Instagram username can only contain letters, numbers, underscores, and periods. Cannot start or end with a period or have consecutive periods.',
