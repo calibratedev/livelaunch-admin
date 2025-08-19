@@ -343,7 +343,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
                 <Input
                   id="instagram_handle"
                   {...register('instagram_handle')}
-                  placeholder="@username or username"
+                  placeholder="Username"
                   className={errors.instagram_handle ? 'border-red-500' : ''}
                 />
                 <p className="text-xs text-muted-foreground">
