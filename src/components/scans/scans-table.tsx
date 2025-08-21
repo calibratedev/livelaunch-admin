@@ -30,6 +30,7 @@ import { Search, Loader2, ExternalLink, MoreHorizontal, Share2, RefreshCw, Eye }
 import { Pagination } from '@/components/ui/pagination'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import config from '@/config'
 
 interface ScansTableProps {
   scans?: AppTypes.PaginatedResponse<AppTypes.Scan>
@@ -113,7 +114,7 @@ export default function ScansTable({
     // TODO: Implement share link generation API call
     try {
       // Placeholder - replace with actual API call
-      const shareLink = `${window.location.origin}/scan/${scan.id}`
+      const shareLink = `${config.shareUrl}/share/${scan.id}`
       await navigator.clipboard.writeText(shareLink)
       toast.success('Share link copied to clipboard!')
     } catch (error: unknown) {
