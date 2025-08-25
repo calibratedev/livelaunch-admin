@@ -94,17 +94,18 @@ export function BrandsTable({
     try {
       setGeneratingOAuthId(brand.id)
 
-      console.log('brand', brand)
+      console.log('*** brand', brand)
       // Make API call to generate OAuth URL on server
       const response = await api.getShopifyOauthUrl<{ url: string }>({
         brand_id: brand.id,
       })
 
+      console.log('*** response', response)
+
       const oauthUrl = response.data.url
       await navigator.clipboard.writeText(oauthUrl)
       setCopiedBrandId(brand.id)
 
-      setCopiedBrandId(null)
       toast.success('OAuth URL copied to clipboard')
     } catch (err) {
       console.error('Failed to generate or copy OAuth URL:', err)
