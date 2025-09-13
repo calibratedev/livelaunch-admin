@@ -1,6 +1,6 @@
 import { env as devEnv } from './dev'
 import { env as localEnv } from './local'
-
+import { env as prodEnv } from './prod'
 const buildEnv = process.env.BUILD_ENV || 'dev'
 
 const commonEnv = {
@@ -15,6 +15,10 @@ const config = {
   local: {
     ...commonEnv,
     ...localEnv,
+  },
+  prod: {
+    ...commonEnv,
+    ...prodEnv,
   },
 }
 
