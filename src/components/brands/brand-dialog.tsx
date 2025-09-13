@@ -21,7 +21,7 @@ import { DragDropFileUpload } from '@/components/drag-drop-file-upload'
 import { uploadFile } from '@/lib/api/upload'
 import Link from 'next/link'
 
-// Zod schema for brand validation
+// Keep the schema simple with a string field for the form
 const brandSchema = z.object({
   name: z.string().min(1, 'Brand name is required').trim(),
   email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
@@ -30,21 +30,23 @@ const brandSchema = z.object({
     .min(1, 'Shopify shop name is required')
     .min(3, 'Shop name must be at least 3 characters')
     .regex(/^[a-zA-Z0-9-]+$/, 'Shop name must contain only letters, numbers, and hyphens'),
-  ig_handle: z
+  instagram_handle: z // Keep as single string for form
     .string()
     .optional()
     .refine(
       (val) => {
         if (!val || val.trim() === '') return true // Allow empty
 
-        // Remove @ symbol if present
-        const cleanHandle = val.replace(/^@/, '')
-
-        if (cleanHandle.length > 30) {
+        // Reject if starts with @
+        if (val.startsWith('@')) {
           return false
         }
 
-        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(cleanHandle)) {
+        if (val.length > 30) {
+          return false
+        }
+
+        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(val)) {
           return false
         }
 
@@ -53,13 +55,16 @@ const brandSchema = z.object({
       (val) => {
         if (!val || val.trim() === '') return { message: '' }
 
-        const cleanHandle = val.replace(/^@/, '')
+        // Check for @ symbol first
+        if (val.startsWith('@')) {
+          return { message: 'Instagram username should not start with @. Enter the username only.' }
+        }
 
-        if (cleanHandle.length > 30) {
+        if (val.length > 30) {
           return { message: 'Instagram username must be 30 characters or less' }
         }
 
-        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(cleanHandle)) {
+        if (!/^[a-zA-Z0-9_]([a-zA-Z0-9_]|\.(?!\.))*[a-zA-Z0-9_]$/.test(val)) {
           return {
             message:
               'Instagram username can only contain letters, numbers, underscores, and periods. Cannot start or end with a period or have consecutive periods.',
@@ -106,7 +111,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
       name: '',
       email: '',
       shopify_shop_name: '',
-      ig_handle: '',
+      instagram_handle: '', // Single string for form
       primary_color: '#000000',
       get_started_image_attachment: null,
       logo_image_attachment: null,
@@ -126,7 +131,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
         name: brand.name || '',
         email: brand.email || '',
         shopify_shop_name: shopifyShopName,
-        ig_handle: brand.ig_handle || '',
+        instagram_handle: brand.instagram_handles?.[0] || '', // Extract first handle from array
         primary_color: brand.primary_color || '#000000',
         get_started_image_attachment: brand.get_started_image_attachment,
         logo_image_attachment: brand.logo_image_attachment,
@@ -138,7 +143,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
         name: '',
         email: '',
         shopify_shop_name: '',
-        ig_handle: '',
+        instagram_handle: '', // Single string for form
         primary_color: '#000000',
         get_started_image_attachment: null,
         logo_image_attachment: null,
@@ -198,10 +203,16 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
         )
       }
 
-      return await api.createBrand<AppTypes.Brand>({
-        ...processedData,
+      // Convert instagram_handle string to instagram_handles array
+      const { instagram_handle, ...dataWithoutInstagramHandle } = processedData
+      const finalData = {
+        ...dataWithoutInstagramHandle,
+        instagram_handles:
+          instagram_handle && instagram_handle.trim() ? [instagram_handle.trim()] : [],
         shopify_domain: shopifyDomain,
-      })
+      }
+
+      return await api.createBrand<AppTypes.Brand>(finalData)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -244,12 +255,17 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
         )
       }
 
-      console.log('*** processedData', processedData)
-      return await api.updateBrand<AppTypes.Brand>({
-        ...processedData,
+      // Convert instagram_handle string to instagram_handles array
+      const { instagram_handle, ...dataWithoutInstagramHandle } = processedData
+      const finalData = {
+        ...dataWithoutInstagramHandle,
+        instagram_handles:
+          instagram_handle && instagram_handle.trim() ? [instagram_handle.trim()] : [],
         brand_id: brand.id,
         shopify_domain: shopifyDomain,
-      })
+      }
+
+      return await api.updateBrand<AppTypes.Brand>(finalData)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -323,18 +339,18 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ig_handle">Instagram Handle</Label>
+                <Label htmlFor="instagram_handle">Instagram Handle</Label>
                 <Input
-                  id="ig_handle"
-                  {...register('ig_handle')}
-                  placeholder="@username or username"
-                  className={errors.ig_handle ? 'border-red-500' : ''}
+                  id="instagram_handle"
+                  {...register('instagram_handle')}
+                  placeholder="Username"
+                  className={errors.instagram_handle ? 'border-red-500' : ''}
                 />
                 <p className="text-xs text-muted-foreground">
                   Optional. Enter Instagram username (with or without @)
                 </p>
-                {errors.ig_handle && (
-                  <p className="text-sm text-red-500">{errors.ig_handle.message}</p>
+                {errors.instagram_handle && (
+                  <p className="text-sm text-red-500">{errors.instagram_handle.message}</p>
                 )}
               </div>
             </div>

@@ -94,17 +94,18 @@ export function BrandsTable({
     try {
       setGeneratingOAuthId(brand.id)
 
-      console.log('brand', brand)
+      console.log('*** brand', brand)
       // Make API call to generate OAuth URL on server
       const response = await api.getShopifyOauthUrl<{ url: string }>({
         brand_id: brand.id,
       })
 
+      console.log('*** response', response)
+
       const oauthUrl = response.data.url
       await navigator.clipboard.writeText(oauthUrl)
       setCopiedBrandId(brand.id)
 
-      setCopiedBrandId(null)
       toast.success('OAuth URL copied to clipboard')
     } catch (err) {
       console.error('Failed to generate or copy OAuth URL:', err)
@@ -138,6 +139,7 @@ export function BrandsTable({
             <TableRow>
               <TableHead>Brand</TableHead>
               <TableHead>Domain</TableHead>
+              <TableHead>Instagram Handles</TableHead>
               <TableHead>Shopify Store</TableHead>
               <TableHead>Products Fetched</TableHead>
               <TableHead>Created Date</TableHead>
@@ -155,6 +157,19 @@ export function BrandsTable({
                   </div>
                 </TableCell>
                 <TableCell>{brand.domain || brand.shopify_domain || 'N/A'}</TableCell>
+                <TableCell>
+                  {brand.instagram_handles && brand.instagram_handles.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {brand.instagram_handles.map((handle, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          @{handle}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No handles</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <Badge variant={brand.shopify_id ? 'default' : 'secondary'}>
                     {brand.shopify_id ? 'Connected' : 'Not connected'}

@@ -97,7 +97,7 @@ declare global {
       background_image_attachment: Attachment
       frame_image_attachment: Attachment
 
-      ig_handle: string
+      instagram_handles: string[]
     }
 
     export interface ProductCategory {
