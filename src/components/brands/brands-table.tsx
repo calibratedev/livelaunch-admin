@@ -18,12 +18,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MoreHorizontal, Edit, Trash2, Eye, Search, Loader2, Link, Check } from 'lucide-react'
+import { MoreHorizontal, Edit, Trash2, Eye, Search, Loader2 } from 'lucide-react'
 import { formatDate } from '@/lib/date'
 import { DeleteBrandDialog } from './delete-brand-dialog'
 import { Pagination } from '@/components/ui/pagination'
-import api from '@/lib/api'
-import { toast } from 'sonner'
 
 interface BrandsTableProps {
   brands: AppTypes.Brand[]
@@ -63,9 +61,6 @@ export function BrandsTable({
     brand: undefined,
   })
 
-  const [copiedBrandId, setCopiedBrandId] = useState<string | null>(null)
-  const [generatingOAuthId, setGeneratingOAuthId] = useState<string | null>(null)
-
   const filteredBrands = brands?.filter(
     (brand) =>
       brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,32 +83,6 @@ export function BrandsTable({
 
   const handleDeleteCancel = () => {
     setDeleteDialogState({ open: false, brand: undefined })
-  }
-
-  const handleCopyOAuthUrl = async (brand: AppTypes.Brand) => {
-    try {
-      setGeneratingOAuthId(brand.id)
-
-      console.log('*** brand', brand)
-      // Make API call to generate OAuth URL on server
-      const response = await api.getShopifyOauthUrl<{ url: string }>({
-        brand_id: brand.id,
-      })
-
-      console.log('*** response', response)
-
-      const oauthUrl = response.data.url
-      await navigator.clipboard.writeText(oauthUrl)
-      setCopiedBrandId(brand.id)
-
-      toast.success('OAuth URL copied to clipboard')
-    } catch (err) {
-      console.error('Failed to generate or copy OAuth URL:', err)
-      toast.error('Failed to generate or copy OAuth URL')
-      // You might want to show a toast notification here for error feedback
-    } finally {
-      setGeneratingOAuthId(null)
-    }
   }
 
   return (
@@ -200,7 +169,7 @@ export function BrandsTable({
                         Edit Brand
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
+                      {/* <DropdownMenuItem
                         onClick={() => handleCopyOAuthUrl(brand)}
                         disabled={generatingOAuthId === brand.id}
                         className="text-blue-600"
@@ -217,7 +186,7 @@ export function BrandsTable({
                           : copiedBrandId === brand.id
                           ? 'Copied!'
                           : 'Copy OAuth URL'}
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                       <div className="px-2 py-1">
                         <p className="text-xs text-muted-foreground">
                           Generate secure integration URL for brand authorization
