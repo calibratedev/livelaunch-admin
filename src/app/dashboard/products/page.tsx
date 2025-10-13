@@ -13,23 +13,20 @@ export default function ProductsPage() {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
+  const queryParams = {
+    keyword: debouncedSearchTerm,
+    page: currentPage,
+    limit: 10,
+    include_count: true,
+  }
   const {
     data: products,
     isLoading,
     isFetching,
     error,
   } = useQuery({
-    queryKey: api.paginateProducts.getQueryKey({
-      keyword: debouncedSearchTerm,
-      page: currentPage,
-      limit: 10,
-    }),
-    queryFn: () =>
-      api.paginateProducts<AppTypes.PaginatedResponse<AppTypes.Product>>({
-        keyword: debouncedSearchTerm,
-        page: currentPage,
-        limit: 10,
-      }),
+    queryKey: api.paginateProducts.getQueryKey(queryParams),
+    queryFn: () => api.paginateProducts<AppTypes.PaginatedResponse<AppTypes.Product>>(queryParams),
     select: (data) => data?.data,
   })
 

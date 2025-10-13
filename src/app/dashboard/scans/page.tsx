@@ -14,11 +14,15 @@ export default function ScansPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
-  const queryKey = api.paginateScans.getQueryKey({
+
+  const queryParams = {
     keyword: debouncedSearchTerm,
     page: currentPage,
     limit: 10,
-  })
+    include_count: true,
+  }
+  const queryKey = api.paginateScans.getQueryKey(queryParams)
+
   const { mutate: syncScan } = useMutation({
     mutationFn: (scan: AppTypes.Scan) => {
       return Api.syncScan<AppTypes.Scan>({

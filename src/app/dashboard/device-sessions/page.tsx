@@ -14,12 +14,13 @@ export default function DeviceSessionsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
-  const queryKey = api.paginateDeviceSessions.getQueryKey({
+  const queryParams = {
     keyword: debouncedSearchTerm,
     page: currentPage,
     limit: 10,
-  })
-
+    include_count: true,
+  }
+  const queryKey = api.paginateDeviceSessions.getQueryKey(queryParams)
   const {
     data: deviceSessions,
     isLoading,
@@ -28,11 +29,7 @@ export default function DeviceSessionsPage() {
   } = useQuery({
     queryKey,
     queryFn: () =>
-      api.paginateDeviceSessions<AppTypes.PaginatedResponse<AppTypes.DeviceSession>>({
-        keyword: debouncedSearchTerm,
-        page: 1,
-        limit: 10,
-      }),
+      api.paginateDeviceSessions<AppTypes.PaginatedResponse<AppTypes.DeviceSession>>(queryParams),
     select: (data) => data?.data,
   })
 

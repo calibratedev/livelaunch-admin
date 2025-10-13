@@ -14,11 +14,13 @@ export default function BrandDeviceSessionsPage() {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
-  const queryKey = api.paginateBrandDeviceSessions.getQueryKey({
+  const queryParams = {
     keyword: debouncedSearchTerm,
     page: currentPage,
     limit: 10,
-  })
+    include_count: true,
+  }
+  const queryKey = api.paginateBrandDeviceSessions.getQueryKey(queryParams)
 
   const {
     data: brandDeviceSessions,

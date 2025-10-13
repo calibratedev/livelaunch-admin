@@ -28,23 +28,21 @@ export default function BrandsPage() {
     brand: undefined,
   })
 
+  const queryParams = {
+    page: currentPage,
+    limit: 10,
+    include_count: true,
+    keyword: debouncedSearchTerm,
+  }
+
   const {
     data: brands,
     isLoading,
     isFetching,
     error,
   } = useQuery({
-    queryKey: api.paginateBrands.getQueryKey({
-      page: currentPage,
-      limit: 10,
-      keyword: debouncedSearchTerm,
-    }),
-    queryFn: () =>
-      api.paginateBrands<AppTypes.PaginatedResponse<AppTypes.Brand>>({
-        page: currentPage,
-        limit: 10,
-        keyword: debouncedSearchTerm,
-      }),
+    queryKey: api.paginateBrands.getQueryKey(queryParams),
+    queryFn: () => api.paginateBrands<AppTypes.PaginatedResponse<AppTypes.Brand>>(queryParams),
     select: (data) => data?.data,
   })
 
