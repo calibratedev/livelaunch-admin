@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BrandDialog } from '@/components/brands/brand-dialog'
 import { BrandsTable } from '@/components/brands/brands-table'
-import { Plus, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/use-debounce'
@@ -72,14 +71,6 @@ export default function BrandsPage() {
     deleteBrandMutation.mutate(id)
   }
 
-  const handleCreateBrand = () => {
-    setDialogState({
-      open: true,
-      mode: 'create',
-      brand: undefined,
-    })
-  }
-
   const handleEditBrand = (brand: AppTypes.Brand) => {
     setDialogState({
       open: true,
@@ -120,10 +111,10 @@ export default function BrandsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Brand Management</h1>
           <p className="text-muted-foreground">Manage and monitor all brands on your platform</p>
         </div>
-        <Button onClick={handleCreateBrand}>
+        {/* <Button onClick={handleCreateBrand}>
           <Plus className="mr-2 h-4 w-4" />
           Add Brand
-        </Button>
+        </Button> */}
       </div>
 
       {/* Brands Table */}

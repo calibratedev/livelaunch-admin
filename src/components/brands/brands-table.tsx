@@ -187,11 +187,11 @@ export function BrandsTable({
                           ? 'Copied!'
                           : 'Copy OAuth URL'}
                       </DropdownMenuItem> */}
-                      <div className="px-2 py-1">
+                      {/* <div className="px-2 py-1">
                         <p className="text-xs text-muted-foreground">
                           Generate secure integration URL for brand authorization
                         </p>
-                      </div>
+                      </div> */}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleDeleteClick(brand)}>
                         <Trash2 className="mr-2 h-4 w-4" />

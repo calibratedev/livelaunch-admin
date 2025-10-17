@@ -330,10 +330,19 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
                     {...register('email')}
                     placeholder="contact@brand.com"
                     className={errors.email ? 'border-red-500' : ''}
+                    disabled={mode === 'edit'}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    This should match the Shopify store owner&apos;s email
-                  </p>
+                  {mode === 'edit' ? (
+                    <p className="text-xs text-amber-600 font-medium">
+                      ⚠️ Email cannot be changed once set.
+                      <Link href="mailto:support@livelaunch.io">Contact support</Link> if you need
+                      to change this.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      This should match the Shopify store owner&apos;s email
+                    </p>
+                  )}
                   {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
                 </div>
               </div>
