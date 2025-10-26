@@ -1,0 +1,1701 @@
+---
+description: Nextjs
+globs: **/*.tsx, **/*.ts
+alwaysApply: false
+---
+
+# Course Viz Frontend - Cursor Rules
+
+You are an expert TypeScript, React, Next.js, and modern web development assistant specializing in
+Next.js App Router architecture, Tailwind CSS v4, shadcn/ui components, and React Query.
+
+## Table of Contents
+
+1. [Project Architecture & Structure](#project-architecture--structure)
+2. [Technology Stack & Versions](#technology-stack--versions)
+3. [Code Style & Structure](#code-style--structure)
+4. [Styling Guidelines (Tailwind CSS v4)](#styling-guidelines-tailwind-css-v4)
+5. [React Query Patterns](#react-query-patterns)
+6. [QueryKey Patterns & Best Practices](#querykey-patterns--best-practices)
+7. [Error Handling & Toast Notifications](#error-handling--toast-notifications)
+8. [URL Query Parameter Handling with nuqs](#url-query-parameter-handling-with-nuqs)
+9. [Form Handling & Validation](#form-handling--validation)
+10. [Performance & Optimization](#performance--optimization)
+11. [Error Handling & Boundaries](#error-handling--boundaries)
+12. [Accessibility & SEO](#accessibility--seo)
+13. [File Naming Conventions](#file-naming-conventions)
+14. [Modal Patterns (React 19)](#modal-patterns-react-19)
+
+## Project Architecture & Structure
+
+This is a single Next.js application with the following structure:
+
+### App Structure
+
+- `src/app/` - Next.js App Router pages and API routes
+- `src/components/` - React components including UI components
+- `src/lib/` - Utility libraries and API client
+- `src/providers/` - React providers (QueryProvider, AuthProvider, etc.)
+- `src/hooks/` - Custom React hooks
+- `src/data/` - Static data and mock data
+- `src/emails/` - React Email templates
+
+## Technology Stack & Versions
+
+- **Next.js 15** with App Router and Turbopack
+- **React 19** with Server Components
+- **TypeScript 5** (strict mode enabled)
+- **Tailwind CSS v4** with utility-first approach
+- **shadcn/ui** components built on Radix UI primitives
+- **React Query** (@tanstack/react-query) for server state management
+- **React Hook Form** with Zod validation
+- **libphonenumber-js** for phone number validation and formatting (US support)
+- **class-variance-authority** for component variants
+- **Lucide React** for icons
+- **React Email** for email templates
+
+## Code Style & Structure
+
+### Import Organization (Strict Order)
+
+```typescript
+// 1. React and external packages (alphabetical)
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+// 2. App-specific aliases (alphabetical)
+import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { config } from '@/lib/config';
+
+// 3. Relative imports (same folder only)
+import { createUserSchema } from './schemas';
+import { UserModal } from './UserModal';
+```
+
+### Alias Import Rules
+
+The project uses a structured approach to import aliases for better organization and clarity:
+
+#### App-Specific Alias Imports
+
+Use `@/` alias for app-specific imports:
+
+```typescript
+// ✅ Correct - Use @/ for app-specific imports
+import { api } from '@/lib/api';
+import { config } from '@/lib/config';
+import { cn } from '@/lib/utils';
+import { UserModal } from '@/components/users/UserModal';
+import { useCourseLoader } from '@/hooks/useCourseLoader';
+import { Button } from '@/components/ui/button';
+
+// ❌ Incorrect - Don't use relative paths for app root imports or parent directories
+import { api } from '../../../lib/api';
+import { UserModal } from '../../components/users/UserModal';
+import { useCourseLoader } from '../hooks/useCourseLoader';
+```
+
+#### App Directory & Alias Mapping
+
+The app has `@/` configured to point to the src directory:
+
+- **App Root**: `@/` → `src/`
+
+#### Alias Usage Guidelines
+
+1. **App-specific files**: Use `@/` for anything within the src directory
+2. **Relative imports**: ONLY for files in the same folder/directory - otherwise use alias imports
+3. **Order**: External packages → App aliases → Relative imports
+
+#### Strict Relative Import Rule
+
+**CRITICAL**: Relative imports (`./` or `../`) are ONLY allowed for files in the same folder. For
+any other imports, you MUST use alias imports.
+
+```typescript
+// ✅ Correct - Same folder relative imports
+import { createUserSchema } from './schemas';
+import { UserFormFields } from './UserFormFields';
+import { UserCard } from './UserCard';
+
+// ✅ Correct - Use alias for parent directories
+import { useAnalyticsData } from '@/hooks/useAnalyticsData';
+import { validatePermissions } from '@/utils/permissions';
+import { Header } from '@/components/shared/Header';
+
+// ❌ Incorrect - No relative imports for parent directories
+import { useAnalyticsData } from '../hooks/useAnalyticsData';
+import { validatePermissions } from '../../utils/permissions';
+import { Header } from '../shared/Header';
+```
+
+#### Examples by App Structure
+
+```typescript
+// src/components/users/CreateUserModal.tsx
+
+// ✅ Correct import organization
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+
+import { createUserSchema } from './schemas';
+import { UserFormFields } from './UserFormFields';
+```
+
+#### TypeScript Path Configuration
+
+The app's `tsconfig.json` includes:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+#### Benefits
+
+- **Clarity**: Clear distinction between external packages and app-specific code
+- **Maintainability**: Easy to refactor and move files within the app
+- **Consistency**: Standardized import patterns throughout the application
+- **Developer Experience**: Better autocomplete and IntelliSense
+- **Scalability**: Easy to reorganize code as the application grows
+
+### Component Structure & Patterns
+
+- Use **functional components** with TypeScript
+- Define interfaces before components with clear naming
+- Use **React.FC** type annotation for consistency
+- Prefer **named exports** over default exports
+- Use **PascalCase** for component files and names
+
+```typescript
+interface ComponentNameProps {
+  title: string;
+  isLoading?: boolean;
+  onAction: (id: string) => void;
+  className?: string;
+}
+
+const ComponentName: React.FC<ComponentNameProps> = ({
+  title,
+  isLoading = false,
+  onAction,
+  className
+}) => {
+  const [localState, setLocalState] = useState<boolean>(false);
+
+  return (
+    <div className={cn("base-classes", className)}>
+      {title}
+    </div>
+  );
+};
+
+export { ComponentName };
+```
+
+### TypeScript Patterns
+
+- Use **strict TypeScript** with noUncheckedIndexedAccess
+- Use TypeScript types from the global **AppTypes namespace**
+- Prefer **interfaces** over type aliases for objects
+- Use **Zod schemas** for runtime validation
+- Avoid `any` - use proper typing with generics when needed
+- **Backend types use snake_case** - match this in Zod schemas and form data
+
+```typescript
+// Use AppTypes namespace for all types
+const user: AppTypes.User = {
+  id: '123',
+  user_role: 'admin',
+  created_at: '2024-01-01T00:00:00Z',
+  // ...
+};
+
+const clientProfile: AppTypes.Client.Profile = {
+  business_name: 'Acme Corp',
+  contact_email: 'contact@acme.com',
+  // ...
+};
+```
+
+## Styling Guidelines (Tailwind CSS v4)
+
+### Class Organization & Usage
+
+- **Always use `cn()` utility for conditional classes and class merging**
+- Follow mobile-first responsive design approach
+- Use semantic color classes and design tokens
+- Prefer Tailwind utilities over custom CSS
+
+#### CRITICAL: Always Use `cn()` for Class Merging
+
+**NEVER use template literals or string concatenation for dynamic classes**. Always use the `cn()`
+utility from `@/lib/utils` for proper class merging:
+
+```typescript
+import { cn } from '@/lib/utils';
+
+// ✅ CORRECT - Use cn() for conditional classes
+<Button
+  className={cn(
+    "base-styles",
+    isActive && "active-styles",
+    variant === 'destructive' && "destructive-styles",
+    className
+  )}
+/>
+
+// ✅ CORRECT - Use cn() for multiple conditions
+<span
+  className={cn(
+    'inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out shadow-sm',
+    checked ? 'translate-x-4' : 'translate-x-0'
+  )}
+/>
+
+// ❌ INCORRECT - Never use template literals for dynamic classes
+<button
+  className={`
+    relative inline-flex h-5 w-9 items-center rounded-xl
+    ${checked ? 'bg-[#1DB954]' : 'bg-[#F5F5F5]'}
+  `}
+>
+
+// ❌ INCORRECT - Never use string concatenation
+<div className={"base-class " + (isActive ? "active" : "inactive")}>
+```
+
+#### `cn()` Usage Patterns
+
+```typescript
+// Simple conditional classes
+className={cn(
+  'base-class',
+  condition && 'conditional-class'
+)}
+
+// Multiple conditions
+className={cn(
+  'base-class',
+  isActive && 'active-class',
+  isDisabled && 'disabled-class',
+  variant === 'primary' && 'primary-class'
+)}
+
+// With external className prop
+className={cn(
+  'default-styles',
+  condition && 'conditional-styles',
+  className // Always pass external className last
+)}
+
+// Complex state-based styling
+className={cn(
+  'base-button-styles',
+  {
+    'bg-blue-500 text-white': variant === 'primary',
+    'bg-gray-200 text-gray-800': variant === 'secondary',
+    'opacity-50 cursor-not-allowed': disabled,
+    'transform scale-95': isPressed
+  },
+  className
+)}
+```
+
+#### Benefits of Using `cn()`
+
+1. **Proper class deduplication**: Handles conflicting Tailwind classes correctly
+2. **Conditional class handling**: Clean syntax for conditional classes
+3. **Type safety**: Works well with TypeScript
+4. **Performance**: Optimized class merging and deduplication
+5. **Maintainability**: Easier to read and modify complex class combinations
+
+### Component Variants with CVA
+
+```typescript
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const buttonVariants = cva('inline-flex items-center justify-center rounded-md transition-colors', {
+  variants: {
+    variant: {
+      default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+      destructive: 'bg-destructive text-white hover:bg-destructive/90',
+      outline: 'border bg-background hover:bg-accent',
+    },
+    size: {
+      default: 'h-10 px-4 py-2',
+      sm: 'h-9 px-3',
+      lg: 'h-11 px-8',
+    },
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'default',
+  },
+});
+
+interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+}
+```
+
+## React Query Patterns
+
+### Data Fetching with React Query
+
+- Use `useQuery` and `useMutation` directly in components (DO NOT create wrapper hook files)
+- Configure appropriate `queryKey`, `staleTime`, and error handling
+- Use descriptive query keys that match the data being fetched
+- Handle loading states, errors, and success scenarios inline
+- Use `api.web.{group}.{method}` pattern for all API calls
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+// TypeScript types are defined in global AppTypes namespace
+
+const PartnersComponent: React.FC = () => {
+  const queryClient = useQueryClient();
+
+  // Use useQuery directly - no wrapper hooks
+  const { data: partners, isLoading, error } = useQuery({
+    queryKey: api.web.partners.list.getQueryKey(),
+    queryFn: async () => {
+      const result = await api.web.partners.list<AppTypes.Partner[]>();
+      return result.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Use useMutation directly - no wrapper hooks
+  const createPartnerMutation = useMutation({
+    mutationFn: async (partnerData: AppTypes.CreatePartnerData) => {
+      const result = await api.web.partners.create(partnerData);
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: api.web.partners.list.getQueryKey()
+      });
+    },
+  });
+
+  // Query with single parameter
+  const { data: metrics } = useQuery({
+    queryKey: api.web.dashboard.metrics.getQueryKey('month'),
+    queryFn: async () => {
+      const result = await api.web.dashboard.metrics<AppTypes.DashboardMetrics>({
+        period: 'month',
+      });
+      return result.data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Query with multiple parameters (object)
+  const { data: filteredUsers } = useQuery({
+    queryKey: api.web.users.list.getQueryKey({ status: 'active', role: 'admin' }),
+    queryFn: async () => {
+      const result = await api.web.users.list({
+        status: 'active',
+        role: 'admin',
+      });
+      return result.data;
+    },
+    staleTime: 1000 * 60 * 2,
+  });
+
+  // Query with array parameters
+  const { data: coursesByIds } = useQuery({
+    queryKey: api.web.courses.getMultiple.getQueryKey(['course1', 'course2', 'course3']),
+    queryFn: async () => {
+      const result = await api.web.courses.getMultiple(['course1', 'course2', 'course3']);
+      return result.data;
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  // Handle loading, error states inline
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage error={error} />;
+
+  return (
+    <div>
+      {partners?.map(partner => (
+        <PartnerCard key={partner.id} partner={partner} />
+      ))}
+
+      <Button
+        onClick={() => createPartnerMutation.mutate(partnerData)}
+        disabled={createPartnerMutation.isPending}
+      >
+        {createPartnerMutation.isPending ? 'Creating...' : 'Create Partner'}
+      </Button>
+    </div>
+  );
+};
+```
+
+### QueryKey Patterns & Best Practices
+
+#### getQueryKey Usage Patterns
+
+Always use `getQueryKey()` method for consistent query key generation. The API client should provide
+this method for each endpoint.
+
+```typescript
+// ✅ No parameters - Simple list queries
+const { data: users } = useQuery({
+  queryKey: api.web.users.list.getQueryKey(),
+  queryFn: () => api.web.users.list(),
+});
+
+// ✅ Single parameter - String, number, or simple value
+const { data: user } = useQuery({
+  queryKey: api.web.users.getById.getQueryKey(userId),
+  queryFn: () => api.web.users.getById(userId),
+});
+
+// ✅ Multiple parameters - Object with named parameters
+const { data: filteredCourses } = useQuery({
+  queryKey: api.web.courses.search.getQueryKey({
+    query: searchTerm,
+    category: selectedCategory,
+    status: 'published',
+  }),
+  queryFn: () =>
+    api.web.courses.search({
+      query: searchTerm,
+      category: selectedCategory,
+      status: 'published',
+    }),
+});
+
+// ✅ Array parameters - For batch operations
+const { data: multipleCourses } = useQuery({
+  queryKey: api.web.courses.getMultiple.getQueryKey(['id1', 'id2', 'id3']),
+  queryFn: () => api.web.courses.getMultiple(['id1', 'id2', 'id3']),
+});
+
+// ✅ Complex parameters - Nested objects
+const { data: analytics } = useQuery({
+  queryKey: api.web.analytics.getData.getQueryKey({
+    dateRange: { start: '2024-01-01', end: '2024-12-31' },
+    metrics: ['views', 'engagement'],
+    filters: { courseType: 'premium' },
+  }),
+  queryFn: () =>
+    api.web.analytics.getData({
+      dateRange: { start: '2024-01-01', end: '2024-12-31' },
+      metrics: ['views', 'engagement'],
+      filters: { courseType: 'premium' },
+    }),
+});
+```
+
+#### QueryKey Invalidation Patterns
+
+```typescript
+const createCourseMutation = useMutation({
+  mutationFn: async (courseData: AppTypes.CreateCourseData) => {
+    return api.web.courses.create(courseData);
+  },
+  onSuccess: newCourse => {
+    // Invalidate list queries (no params)
+    queryClient.invalidateQueries({
+      queryKey: api.web.courses.list.getQueryKey(),
+    });
+
+    // Invalidate specific queries with params
+    queryClient.invalidateQueries({
+      queryKey: api.web.courses.getByCategory.getQueryKey(newCourse.category),
+    });
+
+    // Invalidate multiple related queries using partial matching
+    queryClient.invalidateQueries({
+      predicate: query => {
+        const queryKey = query.queryKey;
+        return queryKey[0] === 'courses' && queryKey[1] === 'search';
+      },
+    });
+
+    // Set specific query data directly
+    queryClient.setQueryData(api.web.courses.getById.getQueryKey(newCourse.id), newCourse);
+  },
+});
+```
+
+#### QueryKey Structure Standards
+
+- **Consistent naming**: Use descriptive names that match the API endpoint
+- **Parameter order**: Always match the order expected by the API client
+- **Type safety**: Ensure parameters match the expected TypeScript types
+- **Caching strategy**: Consider how parameters affect cache invalidation
+
+```typescript
+// ✅ Good - Clear, consistent, type-safe
+api.web.courses.search.getQueryKey({ query: 'react', status: 'published' });
+api.web.users.getByRole.getQueryKey('admin');
+api.web.playlists.getCourses.getQueryKey(playlistId)[
+  // ❌ Bad - Manual query keys, error-prone
+  ('courses', 'search', { query: 'react', status: 'published' })
+][('users', 'role', 'admin')][('playlists', playlistId, 'courses')];
+```
+
+### Error Handling & Toast Notifications
+
+- Implement proper error boundaries
+- **Always use toast from `sonner`** for user feedback
+- Handle 401/403 auth errors appropriately
+- Provide loading and error states for all async operations
+
+#### Toast Usage
+
+Always import and use toast from the correct path with proper syntax:
+
+```typescript
+import { toast } from 'sonner';
+
+// Success notifications
+toast.success('User created successfully');
+toast.success('Settings saved');
+
+// Error notifications
+toast.error('Failed to create user');
+toast.error('Something went wrong');
+
+// Info notifications
+toast.info('Processing your request...');
+
+// Warning notifications
+toast.warning('Please review your changes');
+
+// Custom toast with options
+toast.success('Profile updated', {
+  description: 'Your changes have been saved',
+  duration: 5000,
+});
+
+// In mutation callbacks
+const createUserMutation = useMutation({
+  mutationFn: async (userData: AppTypes.CreateUserData) => {
+    const result = await api.web.users.create(userData);
+    return result.data;
+  },
+  onSuccess: () => {
+    toast.success('User created successfully');
+    queryClient.invalidateQueries({
+      queryKey: api.web.users.list.getQueryKey(),
+    });
+  },
+  onError: error => {
+    toast.error('Failed to create user');
+    console.error('Create user error:', error);
+  },
+});
+```
+
+#### Toast Best Practices
+
+- **Import path**: Always use `sonner` (or your specific toast implementation)
+- **Method syntax**: Use `toast.success()`, `toast.error()`, `toast.info()`, `toast.warning()`
+- **Success messages**: Clear, action-oriented (e.g., "User created successfully")
+- **Error messages**: User-friendly, not technical (e.g., "Failed to save changes")
+- **Placement**: Use in mutation callbacks (`onSuccess`, `onError`) and form submissions
+- **Avoid overuse**: Don't toast for every minor action, focus on important feedback
+
+## URL Query Parameter Handling with nuqs
+
+### nuqs for Search Parameters
+
+- **Always use `nuqs` package** for URL query parameter state management instead of Next.js
+  `useSearchParams`
+- **Combine with `useQueryClient`** from React Query for invalidating queries when params change
+- **Use type-safe parsers** with `parseAsString`, `parseAsArrayOf`, etc.
+- **Use `history: 'replace'`** option to avoid cluttering browser history with filter changes
+
+```typescript
+import { parseAsString, parseAsArrayOf, useQueryState } from 'nuqs';
+import { useQueryClient } from '@tanstack/react-query';
+// Note: useDebounceCallback hook would need to be implemented or use a library like 'use-debounce'
+
+const SearchFiltersComponent: React.FC = () => {
+  const queryClient = useQueryClient();
+
+  // Search term with debouncing
+  const [searchTerm, setSearch] = useQueryState('search', {
+    defaultValue: '',
+    history: 'replace',
+  });
+  const setSearchTerm = useDebounceCallback(value => setSearch(value), 500, {
+    leading: true,
+    trailing: false,
+  });
+
+  // Array filters (e.g., status, categories)
+  const [statusFilter, setStatusFilter] = useQueryState(
+    'statuses',
+    parseAsArrayOf(parseAsString).withDefault([]).withOptions({
+      history: 'replace',
+    })
+  );
+
+  // Single select filters
+  const [sortBy, setSortBy] = useQueryState(
+    'sort',
+    parseAsString.withDefault('created_at').withOptions({
+      history: 'replace',
+    })
+  );
+
+  // Use query params in API calls
+  const { data: results, isLoading } = useQuery({
+    queryKey: api.web.users.list.getQueryKey({
+      search: searchTerm,
+      statuses: statusFilter,
+      sort: sortBy
+    }),
+    queryFn: async () => {
+      const result = await api.web.users.list({
+        search: searchTerm,
+        account_statuses: statusFilter,
+        sort_by: sortBy,
+      });
+      return result.data;
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+
+  // Clear all filters and invalidate queries
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter([]);
+    setSortBy('created_at');
+    queryClient.invalidateQueries({
+      queryKey: api.web.users.list.getQueryKey()
+    });
+  };
+
+  return (
+    <div>
+      {/* Search input */}
+      <input
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search..."
+      />
+
+      {/* Status filters */}
+      <select
+        multiple
+        value={statusFilter}
+        onChange={(e) => {
+          const values = Array.from(e.target.selectedOptions, option => option.value);
+          setStatusFilter(values);
+        }}
+      >
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="pending">Pending</option>
+      </select>
+
+      <button onClick={clearFilters}>Clear Filters</button>
+    </div>
+  );
+};
+```
+
+### nuqs Parser Types
+
+Note: This project doesn't currently use `nuqs` for URL state management. If you need URL state
+management, consider adding `nuqs` as a dependency first.
+
+Use appropriate parsers for different data types:
+
+```typescript
+// String values
+const [name, setName] = useQueryState('name', parseAsString.withDefault(''));
+
+// Number values
+const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1));
+
+// Boolean values
+const [isActive, setIsActive] = useQueryState('active', parseAsBoolean.withDefault(false));
+
+// Array of strings
+const [tags, setTags] = useQueryState('tags', parseAsArrayOf(parseAsString).withDefault([]));
+
+// JSON objects (for complex filters)
+const [filters, setFilters] = useQueryState('filters', parseAsJson<FilterObject>().withDefault({}));
+```
+
+### Benefits of nuqs + useQueryClient Pattern
+
+- **URL-driven state**: All filter state is preserved in URL for sharing/bookmarking
+- **Type safety**: Type-safe query parameter parsing and validation
+- **React Query integration**: Seamless cache invalidation when params change
+- **Performance**: Automatic debouncing for search inputs
+- **User experience**: Browser back/forward navigation works correctly
+- **SEO friendly**: Search state is indexable by search engines
+
+### When NOT to Use nuqs
+
+- **Sensitive data**: Don't store sensitive information in URL parameters
+- **Large objects**: Avoid putting large data structures in URLs
+- **Temporary UI state**: Use `useState` for modal open/close, loading states, etc.
+- **Server Components**: Use Next.js `searchParams` prop in Server Components
+
+## Form Handling & Validation
+
+### React Hook Form with Zod
+
+- Define schemas in separate `schemas.ts` files
+- Use `zodResolver` for form validation
+- Create reusable form components
+- **Use snake_case syntax for schema fields to match backend types**
+
+```typescript
+// schemas.ts
+import { z } from 'zod';
+
+export const createPartnerSchema = z.object({
+  partner_name: z.string().min(1, 'Name is required'),
+  contact_email: z.string().email('Invalid email'),
+  service_types: z.array(z.string()).min(1, 'Select at least one service'),
+});
+
+export type CreatePartnerData = z.infer<typeof createPartnerSchema>;
+
+// Component
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const CreatePartnerForm: React.FC = () => {
+  const form = useForm<CreatePartnerData>({
+    resolver: zodResolver(createPartnerSchema),
+    defaultValues: {
+      partner_name: '',
+      contact_email: '',
+      service_types: [],
+    },
+  });
+
+  const onSubmit = (data: CreatePartnerData) => {
+    // Handle form submission - data fields are already in snake_case for API
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        {/* Form fields */}
+      </form>
+    </Form>
+  );
+};
+```
+
+### Phone Number Validation
+
+**Use `libphonenumber-js` for phone number validation** - This project uses `libphonenumber-js` for
+robust phone number validation with US phone number support.
+
+```typescript
+import { isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js';
+import { z } from 'zod';
+
+// Required US phone number field
+customer_phone: z
+  .string()
+  .min(1, 'Phone number is required')
+  .refine(val => {
+    try {
+      return isValidPhoneNumber(val, 'US');
+    } catch {
+      return false;
+    }
+  }, {
+    message: 'Please enter a valid US phone number',
+  }),
+
+// Optional US phone number field
+contact_phone: z
+  .string()
+  .optional()
+  .refine(val => {
+    if (!val) return true;
+    try {
+      return isValidPhoneNumber(val, 'US');
+    } catch {
+      return false;
+    }
+  }, {
+    message: 'Please enter a valid US phone number',
+  }),
+
+// Phone number in nested object (address, contact info)
+phone_number: z
+  .string()
+  .optional()
+  .refine(val => {
+    if (!val) return true;
+    try {
+      return isValidPhoneNumber(val, 'US');
+    } catch {
+      return false;
+    }
+  }, {
+    message: 'Please enter a valid US phone number',
+  }),
+```
+
+#### Phone Validation Patterns
+
+- **Use `libphonenumber-js` for validation** - Always use `isValidPhoneNumber(value, 'US')` for US
+  phone number validation
+- **Error handling required** - Always wrap `isValidPhoneNumber()` calls in try-catch since invalid
+  formats throw errors
+- **Required phone fields** - Use `.min(1, 'Phone number is required')` + `.refine()` with try-catch
+  error handling
+- **Optional phone fields** - Use `.optional()` + `.refine()` with null check and try-catch error
+  handling
+- **Consistent error messages** - Use "Please enter a valid US phone number" for validation errors
+- **Field naming** - Use `snake_case` field names: `customer_phone`, `contact_phone`, `phone_number`
+- **Phone number formatting** - Use `parsePhoneNumber(value, 'US')?.number` with try-catch for
+  consistent storage format
+
+#### Import Requirements
+
+Always import from `libphonenumber-js` at the top of schema files:
+
+```typescript
+import { isValidPhoneNumber, parsePhoneNumber } from 'libphonenumber-js';
+import { z } from 'zod';
+```
+
+#### Form Handling with Phone Numbers
+
+When handling form submissions, format phone numbers to international format for consistent storage:
+
+```typescript
+const handleSubmit = async (data: FormData) => {
+  // Format phone number to international format for consistent storage
+  let formattedPhoneNumber = data.phone_number;
+  try {
+    const parsedPhone = parsePhoneNumber(data.phone_number, 'US');
+    formattedPhoneNumber = parsedPhone?.number || data.phone_number;
+  } catch {
+    // Keep original if parsing fails
+    formattedPhoneNumber = data.phone_number;
+  }
+
+  const formattedData = {
+    ...data,
+    phone_number: formattedPhoneNumber,
+  };
+
+  // Send formattedData to API
+};
+```
+
+## Performance & Optimization
+
+### React 19 Performance Patterns
+
+- **Use React.memo wisely** - Only for expensive components with frequent re-renders
+- **useMemo and useCallback** - Only when profiling shows performance issues
+- **Prefer React Server Components** - Use for static content and data fetching
+- **Code splitting** - Use dynamic imports for large components/pages
+
+```typescript
+// ✅ Code splitting for large components
+const HeavyChart = React.lazy(() => import('./HeavyChart'));
+
+const Dashboard: React.FC = () => {
+  return (
+    <div>
+      <Suspense fallback={<ChartSkeleton />}>
+        <HeavyChart data={chartData} />
+      </Suspense>
+    </div>
+  );
+};
+
+// ✅ Memoization only when needed (expensive calculations)
+const ExpensiveComponent: React.FC<{ data: ComplexData[] }> = React.memo(({ data }) => {
+  const processedData = useMemo(() => {
+    return data.reduce((acc, item) => {
+      // Expensive processing
+      return processComplexCalculation(acc, item);
+    }, {});
+  }, [data]);
+
+  return <div>{/* Render processed data */}</div>;
+});
+
+// ✅ Callback memoization for stable references
+const UserList: React.FC = () => {
+  const handleUserClick = useCallback((userId: string) => {
+    // Handler logic that doesn't change frequently
+    router.push(`/users/${userId}`);
+  }, [router]);
+
+  return (
+    <div>
+      {users.map(user => (
+        <UserCard key={user.id} user={user} onClick={handleUserClick} />
+      ))}
+    </div>
+  );
+};
+```
+
+### Image Optimization
+
+- **Use Next.js Image component** for automatic optimization
+- **Provide proper alt text** for accessibility
+- **Use appropriate sizes and quality settings**
+
+```typescript
+import Image from 'next/image';
+
+const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
+  return (
+    <div className="course-card">
+      <Image
+        src={course.thumbnail}
+        alt={`${course.title} course thumbnail`}
+        width={300}
+        height={200}
+        className="rounded-lg"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        priority={course.featured} // Only for above-the-fold images
+      />
+    </div>
+  );
+};
+```
+
+## Error Handling & Boundaries
+
+### Error Boundaries
+
+Implement error boundaries for graceful error handling in production.
+
+```typescript
+'use client'; // Required for error boundaries
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error boundary caught error:', error, errorInfo);
+    // Log to error reporting service
+    // reportError(error, errorInfo);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      const FallbackComponent = this.props.fallback || DefaultErrorFallback;
+      return <FallbackComponent error={this.state.error!} reset={this.handleReset} />;
+    }
+
+    return this.props.children;
+  }
+}
+
+const DefaultErrorFallback: React.FC<{ error: Error; reset: () => void }> = ({ error, reset }) => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[200px] p-6 text-center">
+      <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
+      <p className="text-muted-foreground mb-4">
+        {process.env.NODE_ENV === 'development' ? error.message : 'An unexpected error occurred'}
+      </p>
+      <Button onClick={reset}>Try again</Button>
+    </div>
+  );
+};
+
+export { ErrorBoundary };
+```
+
+### Global Error Handling
+
+```typescript
+// src/app/global-error.tsx
+'use client';
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <html>
+      <body>
+        <div className="flex flex-col items-center justify-center min-h-screen p-6">
+          <h2 className="text-xl font-bold mb-4">Something went wrong!</h2>
+          <button
+            onClick={() => reset()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+          >
+            Try again
+          </button>
+        </div>
+      </body>
+    </html>
+  );
+}
+
+// src/app/error.tsx
+'use client';
+
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log the error to an error reporting service
+    console.error('Page error:', error);
+  }, [error]);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
+      <h2 className="text-lg font-semibold mb-2">Something went wrong!</h2>
+      <p className="text-muted-foreground mb-4">
+        We encountered an error while loading this page.
+      </p>
+      <Button onClick={() => reset()}>Try again</Button>
+    </div>
+  );
+}
+```
+
+### Async Error Handling Patterns
+
+```typescript
+// Custom hook for async operations with error handling
+const useAsyncOperation = <T,>(
+  operation: () => Promise<T>,
+  dependencies: React.DependencyList = []
+) => {
+  const [state, setState] = useState<{
+    data: T | null;
+    loading: boolean;
+    error: Error | null;
+  }>({
+    data: null,
+    loading: false,
+    error: null,
+  });
+
+  const execute = useCallback(async () => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const result = await operation();
+      setState({ data: result, loading: false, error: null });
+      return result;
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error('Unknown error');
+      setState({ data: null, loading: false, error: errorObj });
+      throw errorObj;
+    }
+  }, dependencies);
+
+  return { ...state, execute };
+};
+
+// Usage in components
+const DataComponent: React.FC = () => {
+  const { data, loading, error, execute } = useAsyncOperation(
+    () => api.web.data.fetch(),
+    []
+  );
+
+  useEffect(() => {
+    execute().catch(() => {
+      // Error already handled in hook
+      toast.error('Failed to load data');
+    });
+  }, [execute]);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage error={error} onRetry={execute} />;
+
+  return <div>{/* Render data */}</div>;
+};
+```
+
+## Accessibility & SEO
+
+### Accessibility Best Practices
+
+- **Use semantic HTML** elements appropriately
+- **Provide proper ARIA labels** and descriptions
+- **Ensure keyboard navigation** works correctly
+- **Maintain color contrast** ratios for readability
+
+```typescript
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+
+const AccessibleForm: React.FC = () => {
+  return (
+    <form role="form" aria-labelledby="form-title">
+      <h2 id="form-title">Course Registration</h2>
+
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="course-name">Course Name</Label>
+          <Input
+            id="course-name"
+            type="text"
+            required
+            aria-describedby="course-name-help"
+            placeholder="Enter course name"
+          />
+          <p id="course-name-help" className="text-sm text-muted-foreground">
+            Choose a descriptive name for your course
+          </p>
+        </div>
+
+        <Button type="submit" aria-describedby="submit-help">
+          Create Course
+        </Button>
+        <p id="submit-help" className="sr-only">
+          Submit the form to create a new course
+        </p>
+      </div>
+    </form>
+  );
+};
+```
+
+### SEO Optimization
+
+```typescript
+import { Metadata } from 'next';
+
+// Page metadata
+export const metadata: Metadata = {
+  title: 'Course Management | CourseViz',
+  description: 'Manage your golf courses with our comprehensive course visualization platform.',
+  keywords: ['golf courses', 'course management', 'golf visualization'],
+  openGraph: {
+    title: 'Course Management | CourseViz',
+    description: 'Manage your golf courses with our comprehensive course visualization platform.',
+    images: ['/og-course-management.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Course Management | CourseViz',
+    description: 'Manage your golf courses with our comprehensive course visualization platform.',
+  },
+};
+
+// Dynamic metadata
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const course = await api.web.courses.getById(params.id);
+
+  return {
+    title: `${course.name} | CourseViz`,
+    description: course.description,
+    openGraph: {
+      title: course.name,
+      description: course.description,
+      images: [course.thumbnail],
+    },
+  };
+}
+```
+
+## File Naming Conventions
+
+### File & Directory Names
+
+- **PascalCase** for React components: `UserCard.tsx`, `CreateUserModal.tsx`
+- **camelCase** for hooks, utilities: `useAnalyticsData.ts`, `formatMoney.ts`
+- **kebab-case** for directories: `user-management/`, `form-sections/`
+- **kebab-case** for config files: `next.config.mjs`, `eslint.config.js`
+
+## Modal Patterns (React 19)
+
+### Custom Modals with useImperativeHandle & Ref Passing
+
+For custom modals in React 19, use ref-based approach with `useImperativeHandle` instead of
+traditional `isOpen`/`onClose` props pattern. This is aligned with React 19 best practices where
+`forwardRef` is deprecated.
+
+#### Parent Component Usage with Dynamic Options
+
+```typescript
+import React, { useRef } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { PairingModal, type PairingModalRef } from './PairingModal';
+import { CreateCourseModal, type CreateCourseModalRef } from './CreateCourseModal';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
+
+const TVManagementPage: React.FC = () => {
+  const queryClient = useQueryClient();
+
+  // Modal refs
+  const pairingModalRef = useRef<PairingModalRef>(null);
+  const createModalRef = useRef<CreateCourseModalRef>(null);
+
+  // Mutations
+  const pairTVMutation = useMutation({
+    mutationFn: async (tvName: string) => {
+      const result = await api.web.tvs.pair({ name: tvName });
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: api.web.tvs.list.getQueryKey()
+      });
+      toast.success('TV paired successfully');
+    },
+  });
+
+  // Event handlers with dynamic options
+  const handlePairNewTV = () => {
+    pairingModalRef.current?.open({
+      onPaired: async (tvName: string) => {
+        await pairTVMutation.mutateAsync(tvName);
+      },
+      onClose: () => {
+        console.log('Pairing modal closed');
+      }
+    });
+  };
+
+  const handleCreateCourse = () => {
+    createModalRef.current?.open({
+      onSave: async (courseData) => {
+        const result = await api.web.courses.create(courseData);
+        toast.success('Course created successfully');
+        return result.data;
+      },
+      onClose: () => {
+        console.log('Create modal closed');
+      }
+    });
+  };
+
+  // Alternative: Open with pre-configured props
+  const handleQuickPair = () => {
+    pairingModalRef.current?.open({
+      onPaired: (tvName: string) => {
+        console.log(`Quick paired: ${tvName}`);
+      }
+    });
+  };
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">TV Management</h1>
+        <div className="space-x-2">
+          <Button onClick={handlePairNewTV}>
+            Pair New TV
+          </Button>
+          <Button variant="outline" onClick={handleQuickPair}>
+            Quick Pair
+          </Button>
+          <Button onClick={handleCreateCourse}>
+            Create Course
+          </Button>
+        </div>
+      </div>
+
+      {/* TV list */}
+      {tvs?.map(tv => (
+        <div key={tv.id} className="flex justify-between items-center p-4 border rounded">
+          <span>{tv.name}</span>
+          <Button variant="outline">
+            Manage
+          </Button>
+        </div>
+      ))}
+
+      {/* Modal instances with minimal props */}
+      <PairingModal ref={pairingModalRef} />
+      <CreateCourseModal ref={createModalRef} />
+    </div>
+  );
+};
+```
+
+#### Key Patterns & Benefits
+
+- **No forwardRef**: React 19 deprecates forwardRef, use direct ref prop
+- **useImperativeHandle**: Expose `open()`, `close()`, and `isOpen` methods
+- **Internal state management**: Modal manages its own `isOpen` state
+- **Ref-based control**: Parent components control modals via ref methods
+- **Data-only props**: Props only contain data and callbacks, not control state
+- **TypeScript safety**: Export both component and ref type interfaces
+- **Multiple instances**: Use separate refs for create/edit/view scenarios
+- **Better separation of concerns**: Modal controls its own state
+- **Cleaner parent components**: No need to manage modal state in parent
+
+#### When to Use This Pattern
+
+- **All custom modals**: Use this pattern for all custom modal components
+- **Shadcn UI Dialog**: Perfect for Dialog, Sheet, Drawer, and similar components
+- **Complex modals**: Forms, multi-step wizards, confirmation dialogs
+- **Multiple instances**: When you need create/edit/view modals on same page
+- **Conditional modals**: When modal behavior depends on application state
+
+#### When NOT to Use
+
+- **Simple confirmations**: Use shadcn/ui AlertDialog directly with useState
+- **Third-party modals**: Libraries that don't support ref-based control
+- **One-time modals**: Simple modals that don't need external control
+
+## Navigation Patterns
+
+### Use Next.js Link Component Over router.push
+
+Always prefer the `Link` component from `next/link` for navigation instead of programmatic
+navigation with `router.push`, except when navigation must happen as a result of user actions or
+form submissions.
+
+#### ✅ Preferred: Using Link Component
+
+```typescript
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
+const NavigationComponent: React.FC = () => {
+  return (
+    <div className="space-y-4">
+      {/* Simple navigation */}
+      <Link href="/dashboard" className="text-blue-600 hover:underline">
+        Go to Dashboard
+      </Link>
+
+      {/* Navigation with Button styling */}
+      <Link href="/courses/create">
+        <Button variant="default">Create Course</Button>
+      </Link>
+
+      {/* Dynamic routes */}
+      <Link href={`/courses/${courseId}`}>
+        <Button variant="outline">View Course</Button>
+      </Link>
+
+      {/* External links */}
+      <Link
+        href="https://external-site.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:underline"
+      >
+        External Link
+      </Link>
+
+      {/* Navigation with query parameters */}
+      <Link
+        href={{
+          pathname: '/courses',
+          query: { category: 'golf', status: 'published' }
+        }}
+      >
+        <Button variant="secondary">Browse Golf Courses</Button>
+      </Link>
+    </div>
+  );
+};
+```
+
+#### ✅ Correct: Programmatic Navigation for User Actions
+
+```typescript
+import { useRouter } from 'next/navigation';
+import { useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { api } from '@/lib/api';
+
+const CourseActions: React.FC = () => {
+  const router = useRouter();
+
+  // Use router.push for navigation after form submissions
+  const createCourseMutation = useMutation({
+    mutationFn: async (courseData: CreateCourseData) => {
+      const result = await api.web.courses.create(courseData);
+      return result.data;
+    },
+    onSuccess: (newCourse) => {
+      toast.success('Course created successfully');
+      // Navigate after successful action
+      router.push(`/courses/${newCourse.id}`);
+    },
+  });
+
+  // Use router.push for conditional navigation
+  const handleCourseAction = async (action: 'edit' | 'duplicate' | 'delete') => {
+    if (action === 'delete') {
+      const confirmed = window.confirm('Are you sure?');
+      if (confirmed) {
+        await deleteCourse();
+        router.push('/courses'); // Navigate after action
+      }
+    } else if (action === 'edit') {
+      router.push(`/courses/${courseId}/edit`);
+    }
+  };
+
+  // Use router.push for authentication redirects
+  const handleLogin = async (credentials: LoginData) => {
+    try {
+      await loginMutation.mutateAsync(credentials);
+      // Redirect after successful login
+      router.push('/dashboard');
+    } catch (error) {
+      toast.error('Login failed');
+    }
+  };
+
+  return (
+    <div className="space-x-2">
+      <Button onClick={() => createCourseMutation.mutate(courseData)}>
+        Save Course
+      </Button>
+      <Button onClick={() => handleCourseAction('edit')}>
+        Edit Course
+      </Button>
+    </div>
+  );
+};
+```
+
+#### ❌ Avoid: Using router.push for Simple Navigation
+
+```typescript
+// ❌ Don't do this for simple navigation
+const handleNavigate = () => {
+  router.push('/dashboard');
+};
+
+<Button onClick={handleNavigate}>Go to Dashboard</Button>
+
+// ✅ Use Link instead
+<Link href="/dashboard">
+  <Button>Go to Dashboard</Button>
+</Link>
+```
+
+#### Navigation Best Practices
+
+- **Use Link for declarative navigation**: When users click to navigate between pages
+- **Use router.push for imperative navigation**: After form submissions, authentication, or
+  conditional logic
+- **Prefetching**: Link components automatically prefetch pages in production for better performance
+- **Accessibility**: Link components provide proper semantic HTML and keyboard navigation
+- **SEO benefits**: Search engines can crawl Link components but not programmatic navigation
+
+#### Advanced Link Patterns
+
+```typescript
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+
+const NavigationMenu: React.FC = () => {
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/courses', label: 'Courses' },
+    { href: '/playlists', label: 'Playlists' },
+    { href: '/settings', label: 'Settings' },
+  ];
+
+  return (
+    <nav className="space-y-2">
+      {navItems.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={cn(
+            "block px-3 py-2 rounded-md text-sm font-medium transition-colors",
+            pathname === item.href
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          )}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+};
+
+// Conditional link rendering
+const ConditionalNavigation: React.FC<{ userRole: string }> = ({ userRole }) => {
+  return (
+    <div>
+      <Link href="/dashboard">Dashboard</Link>
+
+      {userRole === 'admin' && (
+        <Link href="/admin">
+          <Button variant="outline">Admin Panel</Button>
+        </Link>
+      )}
+
+      {/* Link with custom onClick for analytics */}
+      <Link
+        href="/courses/premium"
+        onClick={() => {
+          // Track analytics event
+          analytics.track('premium_courses_clicked');
+        }}
+      >
+        Premium Courses
+      </Link>
+    </div>
+  );
+};
+```
+
+#### When to Use Each Approach
+
+**Use `Link` component when:**
+
+- Direct user navigation between pages
+- Menu items and navigation bars
+- Call-to-action buttons that lead to other pages
+- Breadcrumb navigation
+- Pagination controls
+
+**Use `router.push()` when:**
+
+- Navigation after form submissions
+- Conditional navigation based on user actions
+- Authentication flows and redirects
+- Navigation after API calls complete
+- Error handling redirects
+- Navigation with complex logic
+
+## Summary & Best Practices
+
+### Development Workflow
+
+1. **Start with requirements**: Understand the feature requirements and user stories
+2. **Plan component structure**: Break down UI into reusable components
+3. **Set up data layer**: Configure React Query hooks and API integration
+4. **Implement UI**: Build components with proper TypeScript types
+5. **Add error handling**: Implement error boundaries and user feedback
+6. **Test accessibility**: Ensure keyboard navigation and screen reader support
+7. **Optimize performance**: Profile and optimize if needed
+
+### Code Quality Checklist
+
+- ✅ **TypeScript**: All components and functions are properly typed
+- ✅ **Error handling**: Proper error boundaries and user feedback
+- ✅ **Accessibility**: ARIA labels, semantic HTML, keyboard navigation
+- ✅ **Performance**: Code splitting, memoization only when needed
+- ✅ **Consistency**: Follow established patterns and naming conventions
+- ✅ **Testing**: Unit tests for complex logic, integration tests for user flows
+- ✅ **Documentation**: Clear component interfaces and usage examples
+
+### Key Principles
+
+- **Type Safety First**: Use TypeScript to catch errors at compile time
+- **Component Composition**: Build small, reusable components
+- **Performance by Default**: Use React 19 features for optimal performance
+- **Accessibility Always**: Ensure all users can access your application
+- **Error Resilience**: Handle errors gracefully with proper user feedback
+- **Developer Experience**: Write code that's easy to understand and maintain
+- **Consistent Patterns**: Follow established patterns throughout the codebase
+
+### Quick Reference
+
+```typescript
+// Component structure
+interface ComponentProps {
+  required: string;
+  optional?: boolean;
+  onAction: (data: string) => void;
+}
+
+const Component: React.FC<ComponentProps> = ({ required, optional = false, onAction }) => {
+  // React Query
+  const { data, isLoading, error } = useQuery({
+    queryKey: api.web.endpoint.getQueryKey(params),
+    queryFn: () => api.web.endpoint(params),
+  });
+
+  // Modal ref
+  const modalRef = useRef<ModalRef>(null);
+
+  // Error handling
+  if (error) return <ErrorMessage error={error} />;
+  if (isLoading) return <LoadingSpinner />;
+
+  return (
+    <div className={cn("base-classes", optional && "conditional-classes")}>
+      {/* Component content */}
+    </div>
+  );
+};
+
+export { Component };
+```
+
+Remember: Always prioritize user experience, code maintainability, and type safety in your
+implementations.

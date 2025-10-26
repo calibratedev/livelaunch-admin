@@ -37,6 +37,7 @@ const endpoints = {
   paginateScans: '/api/admin/scans',
   getScan: '/api/admin/scans/:scan_id',
   syncScan: 'POST /api/admin/scans/:scan_id/sync',
+  shareScan: 'POST /api/admin/scans/:scan_id/share',
 
   getDeviceStats: 'GET /api/admin/stats/devices',
   getSessionStats: 'GET /api/admin/stats/sessions',

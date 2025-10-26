@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -26,11 +26,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { formatDate } from '@/lib/date'
-import { Search, Loader2, ExternalLink, MoreHorizontal, Share2, RefreshCw, Eye } from 'lucide-react'
+import {
+  Search,
+  Loader2,
+  ExternalLink,
+  MoreHorizontal,
+  Share2,
+  RefreshCw,
+  Eye,
+  Send,
+} from 'lucide-react'
 import { Pagination } from '@/components/ui/pagination'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import config from '@/config'
+import { TikTokShareModal, type TikTokShareModalRef } from './tiktok-share-modal'
+import { useMutation } from '@tanstack/react-query'
+import Api from '@/lib/api'
 
 interface ScansTableProps {
   scans?: AppTypes.PaginatedResponse<AppTypes.Scan>
@@ -65,6 +77,24 @@ export default function ScansTable({
     open: false,
     scan: undefined,
   })
+  const { mutate: shareScan } = useMutation({
+    mutationFn: async ({ scan_id, handle }: { scan_id: string; handle: string }) => {
+      const response = await Api.shareScan({
+        scan_id,
+        handle,
+        share_type: 'social',
+        social_type: 'tiktok',
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      toast.success('Scan shared to TikTok successfully')
+    },
+    onError: () => {
+      toast.error('Failed to share scan to TikTok')
+    },
+  })
+  const tiktokShareModalRef = useRef<TikTokShareModalRef | null>(null)
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -126,6 +156,15 @@ export default function ScansTable({
     setRawDataModal({
       open: true,
       scan,
+    })
+  }
+
+  const handleShareToTikTok = (scan: AppTypes.Scan) => {
+    tiktokShareModalRef.current?.open({
+      scan,
+      onShare: async (scanId: string, tiktokUsername: string) => {
+        shareScan({ scan_id: scanId, handle: tiktokUsername })
+      },
     })
   }
 
@@ -314,6 +353,10 @@ export default function ScansTable({
                               <Share2 className="mr-2 h-4 w-4" />
                               Get Share Link
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShareToTikTok(scan)}>
+                              <Send className="mr-2 h-4 w-4" />
+                              Share to TikTok
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onSyncStatus(scan)}>
                               <RefreshCw className="mr-2 h-4 w-4" />
                               Sync Status
@@ -362,6 +405,9 @@ export default function ScansTable({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* TikTok Share Modal */}
+      <TikTokShareModal ref={tiktokShareModalRef} />
     </>
   )
 }
