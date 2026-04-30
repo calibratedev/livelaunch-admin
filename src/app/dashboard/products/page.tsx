@@ -11,14 +11,31 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isFirstLoad, setIsFirstLoad] = useState(true)
+  const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([])
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['active'])
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
-  const queryParams = {
+  const { data: brandsData } = useQuery({
+    queryKey: api.paginateBrands.getQueryKey({ page: 1, limit: 100 }),
+    queryFn: () => api.paginateBrands<AppTypes.PaginatedResponse<AppTypes.Brand>>({ page: 1, limit: 100 }),
+    select: (data) => data?.data,
+  })
+
+  const brands = brandsData?.records || []
+
+  const queryParams: Record<string, unknown> = {
     keyword: debouncedSearchTerm,
     page: currentPage,
     limit: 10,
     include_count: true,
   }
+  if (selectedBrandIds.length > 0) {
+    queryParams.brand_ids = selectedBrandIds.join(',')
+  }
+  if (selectedStatuses.length > 0) {
+    queryParams.statuses = selectedStatuses.join(',')
+  }
+
   const {
     data: products,
     isLoading,
@@ -36,10 +53,9 @@ export default function ProductsPage() {
     }
   }, [isLoading, isFirstLoad])
 
-  // Reset to first page when search term changes
   useEffect(() => {
     setCurrentPage(1)
-  }, [debouncedSearchTerm])
+  }, [debouncedSearchTerm, selectedBrandIds, selectedStatuses])
 
   const isSearching = !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm
 
@@ -86,6 +102,11 @@ export default function ProductsPage() {
         hasNext={products?.has_next || false}
         hasPrev={products?.has_prev || false}
         onPageChange={handlePageChange}
+        brands={brands}
+        selectedBrandIds={selectedBrandIds}
+        onBrandFilterChange={setSelectedBrandIds}
+        selectedStatuses={selectedStatuses}
+        onStatusFilterChange={setSelectedStatuses}
       />
     </div>
   )

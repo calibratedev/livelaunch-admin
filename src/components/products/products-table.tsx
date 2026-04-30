@@ -24,6 +24,7 @@ import { formatMoney } from '@/lib/money'
 import { useState } from 'react'
 import { ProductQRModal } from './product-qr-modal'
 import { Pagination } from '@/components/ui/pagination'
+import { BrandFilter, ProductStatusFilter } from './product-filters'
 
 interface ProductsTableProps {
   products?: AppTypes.PaginatedResponse<AppTypes.Product>
@@ -35,6 +36,11 @@ interface ProductsTableProps {
   hasNext: boolean
   hasPrev: boolean
   onPageChange: (page: number) => void
+  brands?: AppTypes.Brand[]
+  selectedBrandIds: string[]
+  onBrandFilterChange: (ids: string[]) => void
+  selectedStatuses: string[]
+  onStatusFilterChange: (statuses: string[]) => void
 }
 
 export default function ProductsTable({
@@ -47,6 +53,11 @@ export default function ProductsTable({
   hasNext,
   hasPrev,
   onPageChange,
+  brands = [],
+  selectedBrandIds,
+  onBrandFilterChange,
+  selectedStatuses,
+  onStatusFilterChange,
 }: ProductsTableProps) {
   const [qrModalState, setQrModalState] = useState<{
     open: boolean
@@ -56,14 +67,7 @@ export default function ProductsTable({
     product: undefined,
   })
 
-  const filteredProducts =
-    products?.records?.filter((product) => {
-      const matchesSearch =
-        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.brand?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-
-      return matchesSearch
-    }) || []
+  const filteredProducts = products?.records || []
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -101,8 +105,8 @@ export default function ProductsTable({
         <CardDescription>A list of all products across all brands on your platform</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center space-x-2 mb-4">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="relative flex-1 max-w-sm min-w-[200px]">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
@@ -114,6 +118,15 @@ export default function ProductsTable({
               <Loader2 className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
             )}
           </div>
+          <BrandFilter
+            brands={brands}
+            selected={selectedBrandIds}
+            onChange={onBrandFilterChange}
+          />
+          <ProductStatusFilter
+            selected={selectedStatuses}
+            onChange={onStatusFilterChange}
+          />
         </div>
 
         <div className="rounded-md border">
