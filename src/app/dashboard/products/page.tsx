@@ -141,6 +141,7 @@ export default function ProductsPage() {
           setSelectedProductIds(new Set())
         }}
         selectAllFiltered={selectAllFiltered}
+        totalRecords={products?.total_record || 0}
         currentFilters={{
           brand_ids: selectedBrandIds.join(','),
           statuses: selectedStatuses.join(','),

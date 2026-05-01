@@ -23,6 +23,7 @@ interface QRExportDialogProps {
   selectedProductIds: string[]
   onComplete?: () => void
   selectAllFiltered?: boolean
+  totalRecords?: number
   currentFilters?: {
     brand_ids?: string
     statuses?: string
@@ -39,7 +40,7 @@ interface QRExportJob {
   error_message?: string
 }
 
-export function QRExportDialog({ open, onOpenChange, selectedProductIds, onComplete, selectAllFiltered, currentFilters }: QRExportDialogProps) {
+export function QRExportDialog({ open, onOpenChange, selectedProductIds, onComplete, selectAllFiltered, totalRecords, currentFilters }: QRExportDialogProps) {
   const [jobId, setJobId] = useState<string | null>(null)
 
   const startExportMutation = useMutation({
@@ -48,7 +49,8 @@ export function QRExportDialog({ open, onOpenChange, selectedProductIds, onCompl
         ? { ...currentFilters }
         : { product_ids: selectedProductIds }
       const result = await api.bulkExportQRCodes<{ job_id: string }>(payload)
-      return result.data
+      const raw = result.data as unknown
+      return (raw as { data?: { job_id: string } })?.data ?? (raw as { job_id: string })
     },
     onSuccess: (data) => {
       setJobId(data.job_id)
@@ -115,7 +117,7 @@ export function QRExportDialog({ open, onOpenChange, selectedProductIds, onCompl
               : jobId
                 ? `Processing export...`
                 : selectAllFiltered
-                  ? `Export QR codes for all ${selectedProductIds.length > 0 ? selectedProductIds.length : 'filtered'} products`
+                  ? `Export QR codes for all ${totalRecords ?? 'filtered'} products`
                   : `Export QR codes for ${selectedProductIds.length} selected products`}
           </DialogDescription>
         </DialogHeader>
@@ -127,7 +129,7 @@ export function QRExportDialog({ open, onOpenChange, selectedProductIds, onCompl
               onClick={() => startExportMutation.mutate()}
               disabled={!selectAllFiltered && selectedProductIds.length === 0}
             >
-              Start Export ({selectAllFiltered ? 'all filtered' : `${selectedProductIds.length} products`})
+              Start Export ({selectAllFiltered ? `${totalRecords ?? 'all filtered'} products` : `${selectedProductIds.length} products`})
             </Button>
           )}
 
