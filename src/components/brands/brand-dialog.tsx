@@ -77,6 +77,7 @@ const brandSchema = z.object({
   primary_color: z
     .string()
     .regex(/^#[0-9A-F]{6}$/i, 'Please enter a valid hex color (e.g., #FF5733)'),
+  internal_shopify_url: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
   get_started_image_attachment: z.any().nullable().optional(),
   logo_image_attachment: z.any().nullable().optional(),
   background_image_attachment: z.any().nullable().optional(),
@@ -113,6 +114,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
       shopify_shop_name: '',
       instagram_handle: '', // Single string for form
       primary_color: '#000000',
+      internal_shopify_url: '',
       get_started_image_attachment: null,
       logo_image_attachment: null,
       background_image_attachment: null,
@@ -133,6 +135,7 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
         shopify_shop_name: shopifyShopName,
         instagram_handle: brand.instagram_handles?.[0] || '', // Extract first handle from array
         primary_color: brand.primary_color || '#000000',
+        internal_shopify_url: brand.internal_shopify_url || '',
         get_started_image_attachment: brand.get_started_image_attachment,
         logo_image_attachment: brand.logo_image_attachment,
         background_image_attachment: brand.background_image_attachment,
@@ -395,6 +398,23 @@ export function BrandDialog({ open, onOpenChange, mode, brand, onSuccess }: Bran
                 )}
                 {errors.shopify_shop_name && (
                   <p className="text-sm text-red-500">{errors.shopify_shop_name.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="internal_shopify_url">Internal Shopify URL</Label>
+                <Input
+                  id="internal_shopify_url"
+                  {...register('internal_shopify_url')}
+                  placeholder="https://mystore.com"
+                  className={errors.internal_shopify_url ? 'border-red-500' : ''}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optional. If set, scan URLs will use this domain to build product links instead of
+                  generating them from the app config.
+                </p>
+                {errors.internal_shopify_url && (
+                  <p className="text-sm text-red-500">{errors.internal_shopify_url.message}</p>
                 )}
               </div>
             </div>

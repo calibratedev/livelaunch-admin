@@ -21,6 +21,7 @@ const endpoints = {
   deleteBrandProduct: 'DELETE /api/admin/brand_products/:product_id',
   paginateProducts: '/api/admin/brand_products',
   generateProductScanUrl: 'POST /api/admin/brand_products/:product_id/scan_url',
+  updateProductPreviewUrl: 'PATCH /api/admin/brand_products/:product_id/preview_url',
 
   getProduct: '/api/admin/brand_products/:product_id',
 

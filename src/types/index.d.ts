@@ -98,6 +98,7 @@ declare global {
       frame_image_attachment: Attachment
 
       instagram_handles: string[]
+      internal_shopify_url?: string
     }
 
     export interface ProductCategory {
@@ -125,6 +126,7 @@ declare global {
       image: string
       category: ProductCategory
       branch_link: string
+      preview_url?: string
 
       variants: ProductVariant[]
     }

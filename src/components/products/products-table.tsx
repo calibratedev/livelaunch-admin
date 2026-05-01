@@ -17,11 +17,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Search, MoreHorizontal, Eye, Loader2, QrCode, Download } from 'lucide-react'
+import { Search, MoreHorizontal, Eye, Loader2, QrCode, Download, Link } from 'lucide-react'
 import { formatDate } from '@/lib/date'
 import { toTitleCase } from '@/lib/text'
 import { formatMoney } from '@/lib/money'
 import { useState } from 'react'
+import api from '@/lib/api'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ProductQRModal } from './product-qr-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -78,6 +80,25 @@ export default function ProductsTable({
   }>({
     open: false,
     product: undefined,
+  })
+
+  const queryClient = useQueryClient()
+  const [editingPreviewUrl, setEditingPreviewUrl] = useState<{
+    productId: string
+    value: string
+  } | null>(null)
+
+  const updatePreviewUrlMutation = useMutation({
+    mutationFn: async ({ productId, previewUrl }: { productId: string; previewUrl: string }) => {
+      return await api.updateProductPreviewUrl<AppTypes.Product>({
+        product_id: productId,
+        preview_url: previewUrl || null,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: api.paginateProducts.getQueryKey() })
+      setEditingPreviewUrl(null)
+    },
   })
 
   const filteredProducts = products?.records || []
@@ -333,6 +354,17 @@ export default function ProductsTable({
                           <QrCode className="mr-2 h-4 w-4" />
                           QR Code
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            setEditingPreviewUrl({
+                              productId: product.id,
+                              value: product.preview_url || '',
+                            })
+                          }
+                        >
+                          <Link className="mr-2 h-4 w-4" />
+                          {product.preview_url ? 'Edit Preview URL' : 'Set Preview URL'}
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -359,6 +391,48 @@ export default function ProductsTable({
           onOpenChange={handleQRModalClose}
           product={qrModalState.product}
         />
+
+        {/* Preview URL Edit Dialog */}
+        {editingPreviewUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md space-y-4">
+              <h3 className="text-lg font-semibold">Preview URL</h3>
+              <p className="text-sm text-muted-foreground">
+                Set a custom URL to use for QR codes instead of the generated scan URL.
+              </p>
+              <Input
+                value={editingPreviewUrl.value}
+                onChange={(e) =>
+                  setEditingPreviewUrl({ ...editingPreviewUrl, value: e.target.value })
+                }
+                placeholder="https://example.com/products/my-product"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingPreviewUrl(null)}
+                  disabled={updatePreviewUrlMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() =>
+                    updatePreviewUrlMutation.mutate({
+                      productId: editingPreviewUrl.productId,
+                      previewUrl: editingPreviewUrl.value,
+                    })
+                  }
+                  disabled={updatePreviewUrlMutation.isPending}
+                >
+                  {updatePreviewUrlMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
