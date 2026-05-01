@@ -44,7 +44,7 @@ const endpoints = {
   getProductStats: 'GET /api/admin/stats/products',
   getBrandStats: 'GET /api/admin/stats/brands',
 
-  csvImports: '/api/admin/csv_imports',
+  csvImports: 'POST /api/admin/csv_imports',
   csvImportJob: 'GET /api/admin/csv_imports/:job_id',
 }
 
