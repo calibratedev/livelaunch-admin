@@ -55,7 +55,7 @@ export function ProductQRModal({ open, onOpenChange, product }: ProductQRModalPr
     if (qrCodeDataUrl) {
       const link = document.createElement('a')
       link.href = qrCodeDataUrl
-      link.download = `${product?.title || 'product'}-qr-code.png`
+      link.download = `${product?.brand?.shopify_domain || 'product'}_${product?.handle || 'unknown'}.png`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
