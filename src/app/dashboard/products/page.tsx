@@ -113,6 +113,9 @@ export default function ProductsPage() {
         onBrandFilterChange={setSelectedBrandIds}
         selectedStatuses={selectedStatuses}
         onStatusFilterChange={setSelectedStatuses}
+        selectedProductIds={new Set()}
+        onSelectionChange={() => {}}
+        onExportQRCodes={() => {}}
       />
 
       <CSVImportDialog

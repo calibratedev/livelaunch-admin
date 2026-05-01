@@ -17,13 +17,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Search, MoreHorizontal, Eye, Loader2, QrCode } from 'lucide-react'
+import { Search, MoreHorizontal, Eye, Loader2, QrCode, Download } from 'lucide-react'
 import { formatDate } from '@/lib/date'
 import { toTitleCase } from '@/lib/text'
 import { formatMoney } from '@/lib/money'
 import { useState } from 'react'
 import { ProductQRModal } from './product-qr-modal'
 import { Pagination } from '@/components/ui/pagination'
+import { Checkbox } from '@/components/ui/checkbox'
 import { BrandFilter, ProductStatusFilter } from './product-filters'
 
 interface ProductsTableProps {
@@ -41,6 +42,9 @@ interface ProductsTableProps {
   onBrandFilterChange: (ids: string[]) => void
   selectedStatuses: string[]
   onStatusFilterChange: (statuses: string[]) => void
+  selectedProductIds: Set<string>
+  onSelectionChange: (ids: Set<string>) => void
+  onExportQRCodes: () => void
 }
 
 export default function ProductsTable({
@@ -58,6 +62,9 @@ export default function ProductsTable({
   onBrandFilterChange,
   selectedStatuses,
   onStatusFilterChange,
+  selectedProductIds,
+  onSelectionChange,
+  onExportQRCodes,
 }: ProductsTableProps) {
   const [qrModalState, setQrModalState] = useState<{
     open: boolean
@@ -127,12 +134,30 @@ export default function ProductsTable({
             selected={selectedStatuses}
             onChange={onStatusFilterChange}
           />
+          {selectedProductIds.size > 0 && (
+            <Button variant="outline" size="sm" onClick={onExportQRCodes}>
+              <Download className="mr-2 h-4 w-4" />
+              Export QR Codes ({selectedProductIds.size})
+            </Button>
+          )}
         </div>
 
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={filteredProducts.length > 0 && selectedProductIds.size === filteredProducts.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        onSelectionChange(new Set(filteredProducts.map((p) => p.id)))
+                      } else {
+                        onSelectionChange(new Set())
+                      }
+                    }}
+                  />
+                </TableHead>
                 <TableHead>Image</TableHead>
                 <TableHead>Product</TableHead>
                 <TableHead>Brand</TableHead>
@@ -147,6 +172,20 @@ export default function ProductsTable({
             <TableBody>
               {filteredProducts.map((product) => (
                 <TableRow key={product.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedProductIds.has(product.id)}
+                      onCheckedChange={(checked) => {
+                        const next = new Set(selectedProductIds)
+                        if (checked) {
+                          next.add(product.id)
+                        } else {
+                          next.delete(product.id)
+                        }
+                        onSelectionChange(next)
+                      }}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="w-10 h-10 rounded overflow-hidden bg-gray-100">
                       {product.image ? (
