@@ -148,7 +148,13 @@ export default function ProductsTable({
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox
-                    checked={filteredProducts.length > 0 && selectedProductIds.size === filteredProducts.length}
+                    checked={
+                      selectedProductIds.size === 0
+                        ? false
+                        : selectedProductIds.size === filteredProducts.length
+                          ? true
+                          : "indeterminate"
+                    }
                     onCheckedChange={(checked) => {
                       if (checked) {
                         onSelectionChange(new Set(filteredProducts.map((p) => p.id)))
