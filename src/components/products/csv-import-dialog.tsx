@@ -97,7 +97,7 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
     enabled: !!jobId,
     refetchInterval: (query) => {
       const status = query.state.data?.status
-      return status === 'pending' || status === 'processing' ? 2000 : false
+      return status === 'pending' || status === 'processing' ? 5000 : false
     },
   })
 
@@ -150,7 +150,10 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
       })
     },
     onSuccess: (response) => {
-      const id = response.data.id
+      // Server response may double-wrap the job object
+      const raw = response.data as unknown
+      const job = (raw as { data?: AppTypes.CSVImportJob })?.data ?? (raw as AppTypes.CSVImportJob)
+      const id = job.id
       setJobId(id)
       setStoredJob({ jobId: id, brandId: selectedBrandId })
       toast.success('CSV import started')
@@ -364,30 +367,27 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
           )}
 
           {/* Job Progress */}
-          {jobId && job && (
+          {jobId && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium capitalize">{job.status}</span>
-                <Badge variant={job.status === 'completed' ? 'default' : job.status === 'failed' ? 'destructive' : 'secondary'}>
-                  {job.status}
+                <span className="text-sm font-medium capitalize">
+                  {job ? job.status : 'Fetching status...'}
+                </span>
+                <Badge variant={job?.status === 'completed' ? 'default' : job?.status === 'failed' ? 'destructive' : 'secondary'}>
+                  {job?.status ?? 'loading'}
                 </Badge>
               </div>
 
-              {(isProcessing) && (
+              {isProcessing && (
                 <div className="space-y-1">
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all duration-500"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
+                  <Progress value={progressPercent} />
                   <p className="text-xs text-muted-foreground text-right">
-                    {job.processed_rows} / {job.total_rows || '...'} products
+                    {job ? `${job.processed_rows} / ${job.total_rows || '...'} products` : 'Loading...'}
                   </p>
                 </div>
               )}
 
-              {isComplete && (
+              {isComplete && job && (
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {job.created_rows > 0 && (
                     <div className="flex items-center gap-1 text-green-600">
@@ -412,7 +412,7 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
                 </div>
               )}
 
-              {job.error_message && (
+              {job?.error_message && (
                 <p className="text-xs text-red-500">{job.error_message}</p>
               )}
             </div>
