@@ -43,6 +43,9 @@ const endpoints = {
   getSessionStats: 'GET /api/admin/stats/sessions',
   getProductStats: 'GET /api/admin/stats/products',
   getBrandStats: 'GET /api/admin/stats/brands',
+
+  csvImports: '/api/admin/csv_imports',
+  csvImportJob: 'GET /api/admin/csv_imports/:job_id',
 }
 
 export default endpoints

@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Upload } from 'lucide-react'
 import api from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/use-debounce'
 import ProductsTable from '@/components/products/products-table'
+import { CSVImportDialog } from '@/components/products/csv-import-dialog'
+import { Button } from '@/components/ui/button'
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -13,6 +15,7 @@ export default function ProductsPage() {
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([])
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['active'])
+  const [importOpen, setImportOpen] = useState(false)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
   const { data: brandsData } = useQuery({
@@ -89,6 +92,9 @@ export default function ProductsPage() {
             Manage and monitor all products across your platform
           </p>
         </div>
+        <Button onClick={() => setImportOpen(true)} variant="outline">
+          <Upload className="h-4 w-4 mr-2" /> Import CSV
+        </Button>
       </div>
 
       {/* Table */}
@@ -107,6 +113,12 @@ export default function ProductsPage() {
         onBrandFilterChange={setSelectedBrandIds}
         selectedStatuses={selectedStatuses}
         onStatusFilterChange={setSelectedStatuses}
+      />
+
+      <CSVImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        brands={brands}
       />
     </div>
   )

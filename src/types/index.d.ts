@@ -240,6 +240,27 @@ declare global {
       asset_attachment: Attachment
       thumbnail_attachment: Attachment
     }
+
+    export type CSVImportStatus = 'pending' | 'processing' | 'completed' | 'failed'
+
+    export interface CSVImportJob {
+      id: string
+      created_at: number
+      updated_at: number
+      brand_id: string
+      status: CSVImportStatus
+      file_key: string
+      file_name: string
+      vendor_name: string
+      total_rows: number
+      processed_rows: number
+      created_rows: number
+      updated_rows: number
+      skipped_rows: number
+      error_rows: number
+      error_message: string | null
+      completed_at: number | null
+    }
   }
 }
 
