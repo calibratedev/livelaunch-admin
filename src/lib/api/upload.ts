@@ -3,7 +3,7 @@ import api, { ApiResponse } from '.'
 
 type IResource = 'user' | 'brand' | 'brand_product'
 
-async function uploadS3(url: string, formData: FormData, meta: Partial<AppTypes.Attachment> = {}) {
+async function uploadS3(url: string, formData: FormData, meta: Partial<AppTypes.Attachment> = {}, onUploadProgress?: (progress: number) => void) {
   const amzCredential = formData.get('x-amz-credential')?.toString()
 
   return new Promise<ApiResponse<AppTypes.Attachment>>((resolve, reject) => {
@@ -12,6 +12,9 @@ async function uploadS3(url: string, formData: FormData, meta: Partial<AppTypes.
         'Content-Type': 'multipart/form-data',
         'X-Amz-Credential': amzCredential,
       },
+      onUploadProgress: onUploadProgress
+        ? (e) => onUploadProgress(e.total ? Math.round((e.loaded / e.total) * 100) : 0)
+        : undefined,
     })
       .then(() => {
         const file_key = formData.get('key')?.toString()
@@ -108,7 +111,7 @@ export async function uploadFiles(files: AppTypes.AttachmentFile[], resource: IR
   return data as AppTypes.Attachment[]
 }
 
-export async function uploadFile(imageFile: File, prefix: IResource) {
+export async function uploadFile(imageFile: File, prefix: IResource, onUploadProgress?: (progress: number) => void) {
   const respSignature = await api.getS3Signature<AppTypes.S3Signature>({
     content_type: imageFile.type,
     resource: prefix,
@@ -124,7 +127,7 @@ export async function uploadFile(imageFile: File, prefix: IResource) {
 
   formData.append('key', key)
   formData.append('file', imageFile as File)
-  const { success, data } = await uploadS3(url, formData)
+  const { success, data } = await uploadS3(url, formData, {}, onUploadProgress)
 
   if (!success) {
     throw data

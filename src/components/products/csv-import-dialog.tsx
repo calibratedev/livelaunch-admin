@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import { Upload, Loader2, CheckCircle2, XCircle, FileSpreadsheet, Trash2, Plus } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
@@ -26,6 +27,30 @@ import { uploadFile } from '@/lib/api/upload'
 import { toast } from 'sonner'
 import { getCookie } from 'cookies-next/client'
 import config from '@/config'
+
+const STORAGE_KEY = 'csvImportJob'
+
+interface StoredJob {
+  jobId: string
+  brandId: string
+}
+
+function getStoredJob(): StoredJob | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function setStoredJob(job: StoredJob | null) {
+  if (job) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(job))
+  } else {
+    localStorage.removeItem(STORAGE_KEY)
+  }
+}
 
 interface CSVImportDialogProps {
   open: boolean
@@ -44,7 +69,18 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
   const [newBrandName, setNewBrandName] = useState('')
   const [newBrandEmail, setNewBrandEmail] = useState('')
   const [newBrandShopName, setNewBrandShopName] = useState('')
+  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Restore job from localStorage on mount
+  useEffect(() => {
+    const stored = getStoredJob()
+    if (stored?.jobId && stored?.brandId) {
+      setJobId(stored.jobId)
+      setSelectedBrandId(stored.brandId)
+      onOpenChange(true)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Poll for job status
   const { data: jobData } = useQuery({
@@ -64,6 +100,13 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
       return status === 'pending' || status === 'processing' ? 2000 : false
     },
   })
+
+  // Clear stored job once it reaches a terminal state
+  useEffect(() => {
+    if (jobData?.status === 'completed' || jobData?.status === 'failed') {
+      setStoredJob(null)
+    }
+  }, [jobData?.status])
 
   // Create brand mutation
   const createBrandMutation = useMutation({
@@ -95,7 +138,9 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
   const createImportMutation = useMutation({
     mutationFn: async ({ brandId, file }: { brandId: string; file: File }) => {
       // Step 1: Upload CSV to S3
-      const uploadResult = await uploadFile(file, 'brand_product')
+      const uploadResult = await uploadFile(file, 'brand_product', (progress) => {
+        setUploadProgress(progress)
+      })
 
       // Step 2: Create import job via API
       return api.csvImports<AppTypes.CSVImportJob>({
@@ -105,7 +150,9 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
       })
     },
     onSuccess: (response) => {
-      setJobId(response.data.id)
+      const id = response.data.id
+      setJobId(id)
+      setStoredJob({ jobId: id, brandId: selectedBrandId })
       toast.success('CSV import started')
     },
     onError: (error) => {
@@ -139,6 +186,8 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
     setJobId(null)
     setSelectedBrandId(preselectedBrandId || '')
     setShowCreateBrand(false)
+    setUploadProgress(0)
+    setStoredJob(null)
   }, [preselectedBrandId])
 
   const handleClose = useCallback((open: boolean) => {
@@ -303,7 +352,18 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
             </div>
           )}
 
-          {/* Progress */}
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Uploading CSV...</span>
+                <span className="text-xs text-muted-foreground">{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} />
+            </div>
+          )}
+
+          {/* Job Progress */}
           {jobId && job && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
