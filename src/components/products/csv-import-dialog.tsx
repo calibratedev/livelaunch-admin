@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -17,8 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Upload, Loader2, CheckCircle2, XCircle, FileSpreadsheet, Trash2 } from 'lucide-react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { Upload, Loader2, CheckCircle2, XCircle, FileSpreadsheet, Trash2, Plus } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { uploadFile } from '@/lib/api/upload'
 import { toast } from 'sonner'
@@ -33,10 +35,15 @@ interface CSVImportDialogProps {
 }
 
 export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId }: CSVImportDialogProps) {
+  const queryClient = useQueryClient()
   const [selectedBrandId, setSelectedBrandId] = useState(preselectedBrandId || '')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [jobId, setJobId] = useState<string | null>(null)
+  const [showCreateBrand, setShowCreateBrand] = useState(false)
+  const [newBrandName, setNewBrandName] = useState('')
+  const [newBrandEmail, setNewBrandEmail] = useState('')
+  const [newBrandShopName, setNewBrandShopName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Poll for job status
@@ -55,6 +62,32 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
     refetchInterval: (query) => {
       const status = query.state.data?.status
       return status === 'pending' || status === 'processing' ? 2000 : false
+    },
+  })
+
+  // Create brand mutation
+  const createBrandMutation = useMutation({
+    mutationFn: async ({ name, email, shopify_shop_name }: { name: string; email: string; shopify_shop_name: string }) => {
+      return api.createBrand<AppTypes.Brand>({
+        name,
+        email,
+        shopify_shop_name,
+        shopify_domain: `${shopify_shop_name}.myshopify.com`,
+        instagram_handles: [],
+        primary_color: '#000000',
+      })
+    },
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: api.paginateBrands.getQueryKey() })
+      setSelectedBrandId(response.data.id)
+      setShowCreateBrand(false)
+      setNewBrandName('')
+      setNewBrandEmail('')
+      setNewBrandShopName('')
+      toast.success('Brand created')
+    },
+    onError: (error) => {
+      toast.error(`Failed to create brand: ${error.message}`)
     },
   })
 
@@ -105,6 +138,7 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
     setSelectedFile(null)
     setJobId(null)
     setSelectedBrandId(preselectedBrandId || '')
+    setShowCreateBrand(false)
   }, [preselectedBrandId])
 
   const handleClose = useCallback((open: boolean) => {
@@ -135,18 +169,91 @@ export function CSVImportDialog({ open, onOpenChange, brands, preselectedBrandId
           {/* Brand Selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Brand</label>
-            <Select value={selectedBrandId} onValueChange={setSelectedBrandId} disabled={isUploading || !!jobId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a brand" />
-              </SelectTrigger>
-              <SelectContent>
-                {brands.map((brand) => (
-                  <SelectItem key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={selectedBrandId} onValueChange={setSelectedBrandId} disabled={isUploading || !!jobId}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select a brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!jobId && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowCreateBrand(!showCreateBrand)}
+                  disabled={isUploading}
+                  title="Create new brand"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Inline brand creation */}
+            {showCreateBrand && !jobId && (
+              <div className="border rounded-lg p-3 space-y-3 bg-muted/50">
+                <p className="text-sm font-medium">Create New Brand</p>
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Name *</Label>
+                    <Input
+                      placeholder="Brand name"
+                      value={newBrandName}
+                      onChange={(e) => setNewBrandName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Email *</Label>
+                    <Input
+                      type="email"
+                      placeholder="contact@brand.com"
+                      value={newBrandEmail}
+                      onChange={(e) => setNewBrandEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Shopify Shop Name *</Label>
+                    <Input
+                      placeholder="my-store"
+                      value={newBrandShopName}
+                      onChange={(e) => setNewBrandShopName(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
+                    />
+                    {newBrandShopName && (
+                      <p className="text-xs text-muted-foreground">
+                        {newBrandShopName}.myshopify.com
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowCreateBrand(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={!newBrandName || !newBrandEmail || !newBrandShopName || createBrandMutation.isPending}
+                      onClick={() => createBrandMutation.mutate({
+                        name: newBrandName,
+                        email: newBrandEmail,
+                        shopify_shop_name: newBrandShopName,
+                      })}
+                    >
+                      {createBrandMutation.isPending && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                      Create
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* File Upload */}
