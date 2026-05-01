@@ -22,6 +22,12 @@ interface QRExportDialogProps {
   onOpenChange: (open: boolean) => void
   selectedProductIds: string[]
   onComplete?: () => void
+  selectAllFiltered?: boolean
+  currentFilters?: {
+    brand_ids?: string
+    statuses?: string
+    keyword?: string
+  }
 }
 
 interface QRExportJob {
@@ -33,14 +39,15 @@ interface QRExportJob {
   error_message?: string
 }
 
-export function QRExportDialog({ open, onOpenChange, selectedProductIds, onComplete }: QRExportDialogProps) {
+export function QRExportDialog({ open, onOpenChange, selectedProductIds, onComplete, selectAllFiltered, currentFilters }: QRExportDialogProps) {
   const [jobId, setJobId] = useState<string | null>(null)
 
   const startExportMutation = useMutation({
     mutationFn: async () => {
-      const result = await api.bulkExportQRCodes<{ job_id: string }>({
-        product_ids: selectedProductIds,
-      })
+      const payload = selectAllFiltered && currentFilters
+        ? { ...currentFilters }
+        : { product_ids: selectedProductIds }
+      const result = await api.bulkExportQRCodes<{ job_id: string }>(payload)
       return result.data
     },
     onSuccess: (data) => {
@@ -106,8 +113,10 @@ export function QRExportDialog({ open, onOpenChange, selectedProductIds, onCompl
             {jobData?.status === 'completed'
               ? `${jobData.processed} QR codes ready for download`
               : jobId
-                ? `Processing ${selectedProductIds.length} products...`
-                : `Export QR codes for ${selectedProductIds.length} selected products`}
+                ? `Processing export...`
+                : selectAllFiltered
+                  ? `Export QR codes for all ${selectedProductIds.length > 0 ? selectedProductIds.length : 'filtered'} products`
+                  : `Export QR codes for ${selectedProductIds.length} selected products`}
           </DialogDescription>
         </DialogHeader>
 
@@ -116,9 +125,9 @@ export function QRExportDialog({ open, onOpenChange, selectedProductIds, onCompl
             <Button
               className="w-full"
               onClick={() => startExportMutation.mutate()}
-              disabled={selectedProductIds.length === 0}
+              disabled={!selectAllFiltered && selectedProductIds.length === 0}
             >
-              Start Export ({selectedProductIds.length} products)
+              Start Export ({selectAllFiltered ? 'all filtered' : `${selectedProductIds.length} products`})
             </Button>
           )}
 

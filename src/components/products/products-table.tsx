@@ -45,6 +45,9 @@ interface ProductsTableProps {
   selectedProductIds: Set<string>
   onSelectionChange: (ids: Set<string>) => void
   onExportQRCodes: () => void
+  selectAllFiltered: boolean
+  onSelectAllFiltered: (value: boolean) => void
+  totalRecords: number
 }
 
 export default function ProductsTable({
@@ -65,6 +68,9 @@ export default function ProductsTable({
   selectedProductIds,
   onSelectionChange,
   onExportQRCodes,
+  selectAllFiltered,
+  onSelectAllFiltered,
+  totalRecords,
 }: ProductsTableProps) {
   const [qrModalState, setQrModalState] = useState<{
     open: boolean
@@ -75,6 +81,11 @@ export default function ProductsTable({
   })
 
   const filteredProducts = products?.records || []
+
+  // Cross-page checkbox selection state
+  const currentPageIds = filteredProducts.map((p) => p.id)
+  const selectedOnCurrentPage = currentPageIds.filter((id) => selectedProductIds.has(id))
+  const allCurrentPageSelected = selectedOnCurrentPage.length === filteredProducts.length && filteredProducts.length > 0
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -134,13 +145,42 @@ export default function ProductsTable({
             selected={selectedStatuses}
             onChange={onStatusFilterChange}
           />
-          {selectedProductIds.size > 0 && (
+          {selectedProductIds.size > 0 || selectAllFiltered ? (
             <Button variant="outline" size="sm" onClick={onExportQRCodes}>
               <Download className="mr-2 h-4 w-4" />
-              Export QR Codes ({selectedProductIds.size})
+              Export QR Codes ({selectAllFiltered ? totalRecords : selectedProductIds.size})
             </Button>
-          )}
+          ) : null}
         </div>
+
+        {/* Select all filtered prompt */}
+        {selectAllFiltered && (
+          <div className="flex items-center gap-2 px-4 py-2 mb-4 bg-muted/50 rounded-md text-sm">
+            <span>All {totalRecords} products are selected.</span>
+            <button
+              type="button"
+              className="text-primary underline hover:no-underline"
+              onClick={() => {
+                onSelectAllFiltered(false)
+                onSelectionChange(new Set())
+              }}
+            >
+              Clear selection
+            </button>
+          </div>
+        )}
+        {!selectAllFiltered && allCurrentPageSelected && totalRecords > filteredProducts.length && (
+          <div className="flex items-center gap-2 px-4 py-2 mb-4 bg-muted/50 rounded-md text-sm">
+            <span>All {filteredProducts.length} products on this page are selected.</span>
+            <button
+              type="button"
+              className="text-primary underline hover:no-underline"
+              onClick={() => onSelectAllFiltered(true)}
+            >
+              Select all {totalRecords} products
+            </button>
+          </div>
+        )}
 
         <div className="rounded-md border">
           <Table>
@@ -149,17 +189,28 @@ export default function ProductsTable({
                 <TableHead className="w-12">
                   <Checkbox
                     checked={
-                      selectedProductIds.size === 0
-                        ? false
-                        : selectedProductIds.size === filteredProducts.length
-                          ? true
-                          : "indeterminate"
+                      selectAllFiltered
+                        ? true
+                        : selectedOnCurrentPage.length === 0
+                          ? false
+                          : allCurrentPageSelected
+                            ? true
+                            : "indeterminate"
                     }
                     onCheckedChange={(checked) => {
-                      if (checked) {
-                        onSelectionChange(new Set(filteredProducts.map((p) => p.id)))
-                      } else {
+                      if (selectAllFiltered) {
+                        onSelectAllFiltered(false)
                         onSelectionChange(new Set())
+                        return
+                      }
+                      if (checked) {
+                        const next = new Set(selectedProductIds)
+                        currentPageIds.forEach((id) => next.add(id))
+                        onSelectionChange(next)
+                      } else {
+                        const next = new Set(selectedProductIds)
+                        currentPageIds.forEach((id) => next.delete(id))
+                        onSelectionChange(next)
                       }
                     }}
                   />
@@ -180,8 +231,15 @@ export default function ProductsTable({
                 <TableRow key={product.id}>
                   <TableCell>
                     <Checkbox
-                      checked={selectedProductIds.has(product.id)}
+                      checked={selectAllFiltered || selectedProductIds.has(product.id)}
                       onCheckedChange={(checked) => {
+                        if (selectAllFiltered) {
+                          onSelectAllFiltered(false)
+                          const next = new Set(currentPageIds)
+                          next.delete(product.id)
+                          onSelectionChange(next)
+                          return
+                        }
                         const next = new Set(selectedProductIds)
                         if (checked) {
                           next.add(product.id)

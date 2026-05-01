@@ -18,6 +18,7 @@ import {
 import {
   BarChart3,
   Building2,
+  Download,
   LogOut,
   Menu,
   Package,
@@ -45,6 +46,7 @@ const navigation = [
   { name: 'Overview', href: '/dashboard', icon: BarChart3 },
   { name: 'Brand Management', href: '/dashboard/brands', icon: Building2 },
   { name: 'Products', href: '/dashboard/products', icon: Package },
+  { name: 'Exports', href: '/dashboard/exports', icon: Download },
   { name: 'Scans', href: '/dashboard/scans', icon: ScanLine },
   {
     name: 'Device Sessions',

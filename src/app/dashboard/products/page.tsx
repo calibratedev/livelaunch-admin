@@ -18,6 +18,7 @@ export default function ProductsPage() {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['active'])
   const [importOpen, setImportOpen] = useState(false)
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set())
+  const [selectAllFiltered, setSelectAllFiltered] = useState(false)
   const [qrExportOpen, setQrExportOpen] = useState(false)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
@@ -62,6 +63,7 @@ export default function ProductsPage() {
   useEffect(() => {
     setCurrentPage(1)
     setSelectedProductIds(new Set())
+    setSelectAllFiltered(false)
   }, [debouncedSearchTerm, selectedBrandIds, selectedStatuses])
 
   const isSearching = !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm
@@ -120,6 +122,9 @@ export default function ProductsPage() {
         selectedProductIds={selectedProductIds}
         onSelectionChange={setSelectedProductIds}
         onExportQRCodes={() => setQrExportOpen(true)}
+        selectAllFiltered={selectAllFiltered}
+        onSelectAllFiltered={setSelectAllFiltered}
+        totalRecords={products?.total_record || 0}
       />
 
       <CSVImportDialog
@@ -134,6 +139,12 @@ export default function ProductsPage() {
         selectedProductIds={Array.from(selectedProductIds)}
         onComplete={() => {
           setSelectedProductIds(new Set())
+        }}
+        selectAllFiltered={selectAllFiltered}
+        currentFilters={{
+          brand_ids: selectedBrandIds.join(','),
+          statuses: selectedStatuses.join(','),
+          keyword: debouncedSearchTerm,
         }}
       />
     </div>

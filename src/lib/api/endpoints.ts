@@ -49,6 +49,8 @@ const endpoints = {
 
   bulkExportQRCodes: 'POST /api/admin/brand_products/batch_qr_codes',
   bulkExportQRCodesJob: 'GET /api/admin/brand_products/batch_qr_codes/:job_id',
+  qrExportJobs: '/api/admin/brand_products/qr_exports',
+  csvImportJobs: '/api/admin/csv_imports',
 }
 
 export default endpoints
