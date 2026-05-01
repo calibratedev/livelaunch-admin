@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/use-debounce'
 import ProductsTable from '@/components/products/products-table'
 import { CSVImportDialog } from '@/components/products/csv-import-dialog'
+import { QRExportDialog } from '@/components/products/qr-export-dialog'
 import { Button } from '@/components/ui/button'
 
 export default function ProductsPage() {
@@ -16,6 +17,8 @@ export default function ProductsPage() {
   const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([])
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['active'])
   const [importOpen, setImportOpen] = useState(false)
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set())
+  const [qrExportOpen, setQrExportOpen] = useState(false)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
   const { data: brandsData } = useQuery({
@@ -58,6 +61,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     setCurrentPage(1)
+    setSelectedProductIds(new Set())
   }, [debouncedSearchTerm, selectedBrandIds, selectedStatuses])
 
   const isSearching = !isFirstLoad && isFetching && debouncedSearchTerm !== searchTerm
@@ -113,15 +117,24 @@ export default function ProductsPage() {
         onBrandFilterChange={setSelectedBrandIds}
         selectedStatuses={selectedStatuses}
         onStatusFilterChange={setSelectedStatuses}
-        selectedProductIds={new Set()}
-        onSelectionChange={() => {}}
-        onExportQRCodes={() => {}}
+        selectedProductIds={selectedProductIds}
+        onSelectionChange={setSelectedProductIds}
+        onExportQRCodes={() => setQrExportOpen(true)}
       />
 
       <CSVImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
         brands={brands}
+      />
+
+      <QRExportDialog
+        open={qrExportOpen}
+        onOpenChange={setQrExportOpen}
+        selectedProductIds={Array.from(selectedProductIds)}
+        onComplete={() => {
+          setSelectedProductIds(new Set())
+        }}
       />
     </div>
   )
