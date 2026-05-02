@@ -87,11 +87,6 @@ export default function ExportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Exports</h1>
-        <p className="text-muted-foreground">History of QR code exports and CSV imports</p>
-      </div>
-
       <Tabs defaultValue="qr">
         <TabsList>
           <TabsTrigger value="qr">QR Exports</TabsTrigger>

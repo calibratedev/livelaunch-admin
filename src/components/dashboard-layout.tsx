@@ -43,10 +43,10 @@ interface DashboardLayoutProps {
 }
 
 const navigation = [
-  { name: 'Overview', href: '/dashboard', icon: BarChart3 },
+  { name: 'Overview', href: '/dashboard', icon: BarChart3, subtitle: 'Platform activity at a glance' },
   { name: 'Brand Management', href: '/dashboard/brands', icon: Building2 },
   { name: 'Products', href: '/dashboard/products', icon: Package },
-  { name: 'Exports', href: '/dashboard/exports', icon: Download },
+  { name: 'Exports', href: '/dashboard/exports', icon: Download, subtitle: 'History of QR code exports and CSV imports' },
   { name: 'Scans', href: '/dashboard/scans', icon: ScanLine },
   {
     name: 'Device Sessions',
@@ -58,7 +58,7 @@ const navigation = [
     href: '/dashboard/brand-device-sessions',
     icon: Smartphone,
   },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings, subtitle: 'Manage your account settings and preferences' },
 ]
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
@@ -66,6 +66,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
+  const currentPage = navigation.find((item) => item.href === pathname)
+
   const logoutMutation = useMutation({
     mutationFn: () => Api.logout(),
     onSuccess: () => {
@@ -136,7 +138,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Top Navigation */}
         <div className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
               <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm" className="lg:hidden">
@@ -144,6 +146,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Button>
                 </SheetTrigger>
               </Sheet>
+              {currentPage && (
+                <div>
+                  <h1 className="text-lg font-semibold tracking-tight">
+                    {currentPage.name}
+                  </h1>
+                  {currentPage.subtitle && (
+                    <p className="text-xs text-muted-foreground">{currentPage.subtitle}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-4">
@@ -198,7 +210,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Page Content */}
         <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
+          <div className="mx-auto px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>

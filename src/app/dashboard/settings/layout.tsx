@@ -28,12 +28,6 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences</p>
-      </div>
-
       {/* Navigation */}
       <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
         {settingsNavigation.map((item) => {

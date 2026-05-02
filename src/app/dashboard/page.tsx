@@ -1,6 +1,5 @@
 'use client'
 
-import { useAuth } from '@/providers/auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -21,7 +20,7 @@ import {
   DollarSign,
   Loader2,
 } from 'lucide-react'
-import { getFullName, toTitleCase } from '@/lib/text'
+import { toTitleCase } from '@/lib/text'
 import { formatDate } from '@/lib/date'
 import { formatMoney } from '@/lib/money'
 import api from '@/lib/api'
@@ -35,8 +34,6 @@ interface StatResponse {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
-
   // Stats API calls
   const {
     data: deviceStats,
@@ -156,15 +153,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-muted-foreground">
-          Welcome back{getFullName(user) ? `, ${getFullName(user)}` : ''}! Here&apos;s what&apos;s
-          happening with your platform.
-        </p>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((card) => (
