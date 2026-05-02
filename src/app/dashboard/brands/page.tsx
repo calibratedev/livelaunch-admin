@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { BrandDialog } from '@/components/brands/brand-dialog'
 import { BrandsTable } from '@/components/brands/brands-table'
-import { Loader2, Plus } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/use-debounce'
@@ -106,44 +104,23 @@ export default function BrandsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Brand Management</h1>
-          <p className="text-muted-foreground">Manage and monitor all brands on your platform</p>
-        </div>
-        <Button onClick={() => setDialogState({ open: true, mode: 'create', brand: undefined })}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Brand
-        </Button>
-      </div>
+      <BrandsTable
+        brands={brands?.records || []}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        onEditBrand={handleEditBrand}
+        onDeleteBrand={handleDeleteBrand}
+        isDeleting={deleteBrandMutation.isPending}
+        isSearching={isSearching}
+        currentPage={currentPage}
+        totalPages={brands?.total_page || 1}
+        hasNext={brands?.has_next || false}
+        hasPrev={brands?.has_prev || false}
+        onPageChange={handlePageChange}
+        totalRecords={brands?.total_record || 0}
+        onAddBrand={() => setDialogState({ open: true, mode: 'create', brand: undefined })}
+      />
 
-      {/* Brands Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Brands</CardTitle>
-          <CardDescription>A list of all brands registered on your platform</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BrandsTable
-            brands={brands?.records || []}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onEditBrand={handleEditBrand}
-            onDeleteBrand={handleDeleteBrand}
-            isDeleting={deleteBrandMutation.isPending}
-            isSearching={isSearching}
-            // Pagination props
-            currentPage={currentPage}
-            totalPages={brands?.total_page || 1}
-            hasNext={brands?.has_next || false}
-            hasPrev={brands?.has_prev || false}
-            onPageChange={handlePageChange}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Brand Dialog */}
       <BrandDialog
         open={dialogState.open}
         onOpenChange={handleDialogClose}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -71,11 +71,7 @@ export default function BrandDeviceSessionsTable({
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>All Brand Device Sessions</CardTitle>
-          <CardDescription>A list of all brand device sessions on your platform</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           <div className="flex items-center space-x-2 mb-4">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -170,6 +166,7 @@ export default function BrandDeviceSessionsTable({
               hasNext={brandDeviceSessions.has_next}
               hasPrev={brandDeviceSessions.has_prev}
               onPageChange={onPageChange}
+              totalRecords={brandDeviceSessions.total_record}
               className="mt-4"
             />
           )}

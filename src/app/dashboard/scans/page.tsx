@@ -112,17 +112,6 @@ export default function ScansPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Scans</h1>
-          <p className="text-muted-foreground">
-            Monitor and view all product scans on your platform
-          </p>
-        </div>
-      </div>
-
-      {/* Table */}
       <ScansTable
         scans={scans}
         searchTerm={searchTerm}
@@ -134,6 +123,7 @@ export default function ScansPage() {
         hasPrev={scans?.has_prev || false}
         onPageChange={handlePageChange}
         onSyncStatus={syncScan}
+        totalRecords={scans?.total_record || 0}
       />
     </div>
   )

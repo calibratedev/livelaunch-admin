@@ -86,17 +86,6 @@ export default function DeviceSessionsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Device Sessions</h1>
-          <p className="text-muted-foreground">
-            Monitor and view all device sessions on your platform
-          </p>
-        </div>
-      </div>
-
-      {/* Table */}
       <DeviceSessionsTable
         deviceSessions={deviceSessions}
         searchTerm={searchTerm}

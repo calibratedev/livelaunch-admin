@@ -10,6 +10,7 @@ interface PaginationProps {
   hasNext: boolean
   hasPrev: boolean
   onPageChange: (page: number) => void
+  totalRecords?: number
   className?: string
 }
 
@@ -19,6 +20,7 @@ export function Pagination({
   hasNext,
   hasPrev,
   onPageChange,
+  totalRecords,
   className,
 }: PaginationProps) {
   const generatePageNumbers = () => {
@@ -61,6 +63,9 @@ export function Pagination({
   return (
     <div className={cn('flex items-center justify-between', className)}>
       <div className="text-sm text-muted-foreground">
+        {totalRecords != null && (
+          <span>{totalRecords.toLocaleString()} records &middot; </span>
+        )}
         Page {currentPage} of {totalPages}
       </div>
 

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -17,7 +17,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Search, MoreHorizontal, Eye, Loader2, QrCode, Download, Link } from 'lucide-react'
+import { Search, MoreHorizontal, Eye, Loader2, QrCode, Download, Link, Upload } from 'lucide-react'
 import { formatDate } from '@/lib/date'
 import { toTitleCase } from '@/lib/text'
 import { formatMoney } from '@/lib/money'
@@ -50,6 +50,7 @@ interface ProductsTableProps {
   selectAllFiltered: boolean
   onSelectAllFiltered: (value: boolean) => void
   totalRecords: number
+  onImportCSV: () => void
 }
 
 export default function ProductsTable({
@@ -73,6 +74,7 @@ export default function ProductsTable({
   selectAllFiltered,
   onSelectAllFiltered,
   totalRecords,
+  onImportCSV,
 }: ProductsTableProps) {
   const [qrModalState, setQrModalState] = useState<{
     open: boolean
@@ -139,11 +141,7 @@ export default function ProductsTable({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>All Products</CardTitle>
-        <CardDescription>A list of all products across all brands on your platform</CardDescription>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-2">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="relative flex-1 max-w-sm min-w-[200px]">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -166,6 +164,9 @@ export default function ProductsTable({
             selected={selectedStatuses}
             onChange={onStatusFilterChange}
           />
+          <Button onClick={onImportCSV} variant="outline" size="sm">
+            <Upload className="h-4 w-4 mr-2" /> Import CSV
+          </Button>
           {selectedProductIds.size > 0 || selectAllFiltered ? (
             <Button variant="outline" size="sm" onClick={onExportQRCodes}>
               <Download className="mr-2 h-4 w-4" />
@@ -331,10 +332,10 @@ export default function ProductsTable({
                     <Badge
                       variant={
                         getStatusColor(product.status) as
-                          | 'default'
-                          | 'secondary'
-                          | 'destructive'
-                          | 'outline'
+                        | 'default'
+                        | 'secondary'
+                        | 'destructive'
+                        | 'outline'
                       }
                     >
                       {toTitleCase(product.status)}
@@ -382,6 +383,7 @@ export default function ProductsTable({
             hasNext={hasNext}
             hasPrev={hasPrev}
             onPageChange={onPageChange}
+            totalRecords={totalRecords}
           />
         </div>
 
