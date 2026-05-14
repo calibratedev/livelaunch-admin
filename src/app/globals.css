@@ -120,6 +120,13 @@
     @apply bg-background text-foreground;
   }
 
+  /* Safety net: prevent Radix overlay from blocking clicks after close */
+  [data-slot="dialog-overlay"][data-state="closed"],
+  [data-slot="alert-dialog-overlay"][data-state="closed"],
+  [data-slot="sheet-overlay"][data-state="closed"] {
+    pointer-events: none !important;
+  }
+
   /* Thin scrollbar */
   * {
     scrollbar-width: thin;
