@@ -8,9 +8,25 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 function Dialog({
+  open,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+  // Force-clean react-remove-scroll artifacts when dialog closes.
+  // Radix's internal scroll lock can leave overflow:hidden / padding-right
+  // on <body> if the Presence exit animation is interrupted or if
+  // react-remove-scroll's cleanup races with React's unmount.
+  React.useEffect(() => {
+    if (open) return
+    const body = document.body
+    const timeout = setTimeout(() => {
+      body.style.removeProperty("overflow")
+      body.style.removeProperty("padding-right")
+      body.style.removeProperty("pointer-events")
+    }, 200) // after exit animation
+    return () => clearTimeout(timeout)
+  }, [open])
+
+  return <DialogPrimitive.Root data-slot="dialog" open={open} {...props} />
 }
 
 function DialogTrigger({
