@@ -68,72 +68,73 @@ export function ProductQRModal({ open, onOpenChange, product }: ProductQRModalPr
     // setQrCodeDataUrl('')
   }
 
-  if (!product) return null
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Product QR Code</DialogTitle>
-          <DialogDescription>Generate and download QR code for {product.title}</DialogDescription>
-        </DialogHeader>
+        {product && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Product QR Code</DialogTitle>
+              <DialogDescription>Generate and download QR code for {product.title}</DialogDescription>
+            </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Product Info */}
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            {product.image && (
-              <img
-                src={product.image}
-                alt={product.title}
-                className="w-12 h-12 rounded object-cover"
-              />
-            )}
-            <div>
-              <h3 className="font-medium">{product.title}</h3>
-              <p className="text-sm text-muted-foreground">{product.brand?.name}</p>
-            </div>
-          </div>
+            <div className="space-y-6">
+              {/* Product Info */}
+              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                {product.image && (
+                  <img
+                    src={product.image}
+                    alt={product.title}
+                    className="w-12 h-12 rounded object-cover"
+                  />
+                )}
+                <div>
+                  <h3 className="font-medium">{product.title}</h3>
+                  <p className="text-sm text-muted-foreground">{product.brand?.name}</p>
+                </div>
+              </div>
 
-          {/* QR Code Section */}
-          <div className="text-center space-y-4">
-            {/* // No valid branch link */}
-            <div className="space-y-4">
-              {!!qrCodeDataUrl ? (
+              {/* QR Code Section */}
+              <div className="text-center space-y-4">
                 <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <img
-                      src={qrCodeDataUrl}
-                      alt="QR Code"
-                      className="border rounded-lg"
-                      width={200}
-                      height={200}
-                    />
-                  </div>
+                  {!!qrCodeDataUrl ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <img
+                          src={qrCodeDataUrl}
+                          alt="QR Code"
+                          className="border rounded-lg"
+                          width={200}
+                          height={200}
+                        />
+                      </div>
+                    </div>
+                  ) : generateBrandLinkMutation.isPending ? (
+                    <div className="flex flex-col items-center space-y-2 py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Generating QR code...</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center space-x-2 text-amber-600">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">No valid scan URL found</span>
+                    </div>
+                  )}
                 </div>
-              ) : generateBrandLinkMutation.isPending ? (
-                <div className="flex flex-col items-center space-y-2 py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Generating QR code...</p>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center space-x-2 text-amber-600">
-                  <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm font-medium">No valid scan URL found</span>
+              </div>
+
+              {/* Actions */}
+              {qrCodeDataUrl && (
+                <div className="flex justify-center space-x-2">
+                  <Button onClick={handleDownloadQR} className="w-full">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download QR Code
+                  </Button>
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Actions */}
-          {qrCodeDataUrl && (
-            <div className="flex justify-center space-x-2">
-              <Button onClick={handleDownloadQR} className="w-full">
-                <Download className="mr-2 h-4 w-4" />
-                Download QR Code
-              </Button>
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )
