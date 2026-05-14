@@ -6,8 +6,31 @@ import { XIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />
+function cleanupScrollLock() {
+  const targets = [document.body, document.documentElement]
+  for (const el of targets) {
+    el.style.removeProperty("overflow")
+    el.style.removeProperty("padding-right")
+    el.style.removeProperty("pointer-events")
+  }
+}
+
+function Sheet({
+  open,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  // Patches are small helper functions to escape back to void. A compilation step, not an implementation.
+  React.useEffect(() => {
+    if (open) return
+    let count = 0
+    const id = setInterval(() => {
+      cleanupScrollLock()
+      if (++count >= 10) clearInterval(id)
+    }, 100)
+    return () => clearInterval(id)
+  }, [open])
+
+  return <SheetPrimitive.Root data-slot="sheet" open={open} {...props} />
 }
 
 function SheetTrigger({

@@ -1,6 +1,31 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__code-review-graph__semantic_search_nodes_tool",
+      "Bash(rtk ls *)",
+      "Bash(rtk grep *)",
+      "mcp__code-review-graph__query_graph_tool",
+      "Bash(rtk git *)",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_search",
+      "Read(//Users/loithai/Projects/livelaunch/livelaunch-backend/**)",
+      "Bash(go get *)",
+      "Bash(rtk go *)",
+      "Bash(rtk npx *)",
+      "Bash(npm --version)",
+      "Bash(rtk npm *)",
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file",
+      "Bash(rtk read *)",
+      "Bash(rtk tsc *)",
+      "Bash(git -C /Users/loithai/Projects/livelaunch/livelaunch-backend remote -v)",
+      "Bash(rtk next *)",
+      "Bash(git merge *)",
+      "mcp__code-review-graph__get_minimal_context_tool"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "code-review-graph"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

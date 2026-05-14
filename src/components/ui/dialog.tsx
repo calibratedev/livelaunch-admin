@@ -7,23 +7,30 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
+function cleanupScrollLock() {
+  const targets = [document.body, document.documentElement]
+  for (const el of targets) {
+    el.style.removeProperty("overflow")
+    el.style.removeProperty("padding-right")
+    el.style.removeProperty("pointer-events")
+  }
+}
+
 function Dialog({
   open,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  // Force-clean react-remove-scroll artifacts when dialog closes.
-  // Radix's internal scroll lock can leave overflow:hidden / padding-right
-  // on <body> if the Presence exit animation is interrupted or if
-  // react-remove-scroll's cleanup races with React's unmount.
+  // Force-clean react-remove-scroll artifacts after dialog closes.
+  // Uses repeated checks because react-remove-scroll may re-apply styles
+  // during Radix's Presence exit animation.
   React.useEffect(() => {
     if (open) return
-    const body = document.body
-    const timeout = setTimeout(() => {
-      body.style.removeProperty("overflow")
-      body.style.removeProperty("padding-right")
-      body.style.removeProperty("pointer-events")
-    }, 200) // after exit animation
-    return () => clearTimeout(timeout)
+    let count = 0
+    const id = setInterval(() => {
+      cleanupScrollLock()
+      if (++count >= 10) clearInterval(id)
+    }, 100)
+    return () => clearInterval(id)
   }, [open])
 
   return <DialogPrimitive.Root data-slot="dialog" open={open} {...props} />

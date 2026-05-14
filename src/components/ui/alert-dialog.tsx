@@ -6,10 +6,30 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
+function cleanupScrollLock() {
+  const targets = [document.body, document.documentElement]
+  for (const el of targets) {
+    el.style.removeProperty("overflow")
+    el.style.removeProperty("padding-right")
+    el.style.removeProperty("pointer-events")
+  }
+}
+
 function AlertDialog({
+  open,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
-  return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
+  React.useEffect(() => {
+    if (open) return
+    let count = 0
+    const id = setInterval(() => {
+      cleanupScrollLock()
+      if (++count >= 10) clearInterval(id)
+    }, 100)
+    return () => clearInterval(id)
+  }, [open])
+
+  return <AlertDialogPrimitive.Root data-slot="alert-dialog" open={open} {...props} />
 }
 
 function AlertDialogTrigger({
