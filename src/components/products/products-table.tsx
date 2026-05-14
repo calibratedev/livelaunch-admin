@@ -25,6 +25,13 @@ import { useState } from 'react'
 import api from '@/lib/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ProductQRModal } from './product-qr-modal'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Pagination } from '@/components/ui/pagination'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BrandFilter, ProductStatusFilter } from './product-filters'
@@ -396,44 +403,48 @@ export default function ProductsTable({
 
         {/* Preview URL Edit Dialog */}
         {editingPreviewUrl && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md space-y-4">
-              <h3 className="text-lg font-semibold">Preview URL</h3>
-              <p className="text-sm text-muted-foreground">
-                Set a custom URL to use for QR codes instead of the generated scan URL.
-              </p>
-              <Input
-                value={editingPreviewUrl.value}
-                onChange={(e) =>
-                  setEditingPreviewUrl({ ...editingPreviewUrl, value: e.target.value })
-                }
-                placeholder="https://example.com/products/my-product"
-              />
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setEditingPreviewUrl(null)}
-                  disabled={updatePreviewUrlMutation.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() =>
-                    updatePreviewUrlMutation.mutate({
-                      productId: editingPreviewUrl.productId,
-                      previewUrl: editingPreviewUrl.value,
-                    })
+          <Dialog open={true} onOpenChange={(open) => !open && setEditingPreviewUrl(null)}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Preview URL</DialogTitle>
+                <DialogDescription>
+                  Set a custom URL to use for QR codes instead of the generated scan URL.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input
+                  value={editingPreviewUrl.value}
+                  onChange={(e) =>
+                    setEditingPreviewUrl({ ...editingPreviewUrl, value: e.target.value })
                   }
-                  disabled={updatePreviewUrlMutation.isPending}
-                >
-                  {updatePreviewUrlMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Save
-                </Button>
+                  placeholder="https://example.com/products/my-product"
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingPreviewUrl(null)}
+                    disabled={updatePreviewUrlMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      updatePreviewUrlMutation.mutate({
+                        productId: editingPreviewUrl.productId,
+                        previewUrl: editingPreviewUrl.value,
+                      })
+                    }
+                    disabled={updatePreviewUrlMutation.isPending}
+                  >
+                    {updatePreviewUrlMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Save
+                  </Button>
+                </div>
               </div>
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
       </CardContent>
     </Card>
