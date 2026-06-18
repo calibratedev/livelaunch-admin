@@ -76,12 +76,7 @@ export default function ScansPage() {
     isFetching,
   } = useQuery({
     queryKey,
-    queryFn: () =>
-      api.paginateScans<AppTypes.PaginatedResponse<AppTypes.Scan>>({
-        keyword: debouncedSearchTerm,
-        page: currentPage,
-        limit: 10,
-      }),
+    queryFn: () => api.paginateScans<AppTypes.PaginatedResponse<AppTypes.Scan>>(queryParams),
     select: (data) => data?.data,
   })
 
