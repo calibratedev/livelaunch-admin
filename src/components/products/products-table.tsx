@@ -60,6 +60,29 @@ interface ProductsTableProps {
   onImportCSV: () => void
 }
 
+function ProductImage({ product }: { product: AppTypes.Product }) {
+  const productImageUrl =
+    product.image_attachment?.file_url || product.image_attachments?.[0]?.file_url || product.image
+
+  return (
+    <div className="w-10 h-10 rounded overflow-hidden bg-gray-100">
+      {productImageUrl ? (
+        <img
+          src={productImageUrl}
+          alt={product.title}
+          className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => window.open(productImageUrl, '_blank')}
+          title="Click to preview image"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <Eye className="h-4 w-4" />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ProductsTable({
   products,
   searchTerm,
@@ -280,21 +303,7 @@ export default function ProductsTable({
                     />
                   </TableCell>
                   <TableCell>
-                    <div className="w-10 h-10 rounded overflow-hidden bg-gray-100">
-                      {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.title}
-                          className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => window.open(product.image, '_blank')}
-                          title="Click to preview image"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <Eye className="h-4 w-4" />
-                        </div>
-                      )}
-                    </div>
+                    <ProductImage product={product} />
                   </TableCell>
                   <TableCell>
                     <div>

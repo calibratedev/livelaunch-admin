@@ -124,6 +124,8 @@ declare global {
       status: string
       tags: string
       image: string
+      image_attachment?: Attachment
+      image_attachments?: Attachment[]
       category: ProductCategory
       branch_link: string
       preview_url?: string
