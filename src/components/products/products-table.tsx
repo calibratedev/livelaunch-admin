@@ -273,6 +273,7 @@ export default function ProductsTable({
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Variants</TableHead>
+                <TableHead className="text-right">Scans</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last Update</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -343,6 +344,9 @@ export default function ProductsTable({
                         </Badge>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {(product.total_scans ?? 0).toLocaleString()}
                   </TableCell>
                   <TableCell>
                     <Badge

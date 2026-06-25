@@ -129,6 +129,7 @@ declare global {
       category: ProductCategory
       branch_link: string
       preview_url?: string
+      total_scans: number
 
       variants: ProductVariant[]
     }
